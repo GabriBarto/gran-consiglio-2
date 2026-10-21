@@ -43,6 +43,11 @@ Durante la presentazione il pulsante **“↺ Reset dati demo”** nel footer ri
 PIN demo dei negozi: Vivaio Il Glicine `1111` · Fiori & Fiori di Marta `2222` · Garden Verde `3333` ·
 Succulente Matte `4444` · Il Bosso e la Rosa `5555`.
 
+## App mobile (React Native / Expo)
+
+La cartella `mobile/` contiene un'unica app per clienti e venditori (QR di ritiro + scanner per i negozianti),
+che usa lo stesso backend. Istruzioni in [`mobile/README.md`](mobile/README.md).
+
 ## Architettura
 
 - **Backend**: Node.js 22, zero dipendenze (server HTTP nativo + `node:sqlite`). Nessun `npm install`, build veloce.

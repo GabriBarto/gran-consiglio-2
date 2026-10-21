@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "VerdeSalva",
+    "slug": "verdesalva",
+    "scheme": "verdesalva",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": { "NSCameraUsageDescription": "La fotocamera serve a scansionare il QR di ritiro dei clienti." }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F2E4",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "permissions": ["CAMERA"],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": { "favicon": "./assets/favicon.png", "bundler": "metro" },
+    "plugins": [
+      "expo-router",
+      ["expo-camera", { "cameraPermission": "La fotocamera serve a scansionare il QR di ritiro dei clienti." }]
+    ]
+  }
+}

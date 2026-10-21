@@ -21,8 +21,15 @@ const nowIso = () => new Date().toISOString();
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon' };
 
+// CORS aperto: serve all'app mobile (Expo) e alla versione web di sviluppo
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 function send(res, status, body) {
-  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', ...CORS });
   res.end(JSON.stringify(body));
 }
 
@@ -68,6 +75,12 @@ route('GET', '/api/offers', ({ url }) => {
   if (city) rows = rows.filter((r) => r.city === city);
   if (q) rows = rows.filter((r) => `${r.title} ${r.description} ${r.shop_name}`.toLowerCase().includes(q));
   return rows;
+});
+
+route('GET', '/api/offers/(\\d+)', ({ match }) => {
+  const o = db.prepare(`${OFFER_SELECT} WHERE o.id = ?`).get(Number(match[0]));
+  if (!o) throw new HttpError(404, 'Offerta non trovata');
+  return o;
 });
 
 route('GET', '/api/filters', () => ({
@@ -182,6 +195,7 @@ function serveStatic(req, res, pathname) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://localhost');
+  if (req.method === 'OPTIONS') { res.writeHead(204, CORS); return res.end(); }
   try {
     for (const r of routes) {
       const match = r.method === req.method && r.re.exec(url.pathname);
