@@ -20,10 +20,11 @@ piante e i fiori invenduti ("sorprese verdi"), i clienti li prenotano e li ritir
 Requisiti: Docker + Docker Compose.
 
 ```bash
+docker compose down -v           # facoltativo: riparte da un database pulito
 docker compose up -d --build     # oppure: make up
 ```
 
-Apri **http://localhost:8080**. Per cambiare porta: `APP_PORT=9000 docker compose up -d --build` (vedi `.env.example`).
+Attendi qualche secondo (il database deve diventare healthy) e apri **http://localhost:8080**; `curl localhost:8080/health` risponde quando l'app è pronta. Per cambiare porta: `APP_PORT=9000 docker compose up -d --build` (vedi `.env.example`).
 
 | Comando | Effetto |
 |---|---|
