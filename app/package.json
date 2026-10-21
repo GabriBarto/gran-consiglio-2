@@ -4,10 +4,16 @@
   "description": "Salva le piante invendute: marketplace anti-spreco per vivai e fioristi",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.13" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node server.js",
     "dev": "node --watch server.js",
-    "seed": "node seed.js --reset"
+    "seed": "node seed.js --reset",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
   }
 }

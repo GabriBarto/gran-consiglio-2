@@ -1,8 +1,8 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { SellerSession } from './api';
+import type { Session } from './api';
 
 const CODES = 'vs-codes';
-const SELLER = 'vs-seller';
+const SESSION = 'vs-session';
 
 export async function getCodes(): Promise<string[]> {
   try { return JSON.parse((await AsyncStorage.getItem(CODES)) ?? '[]'); } catch { return []; }
@@ -10,10 +10,10 @@ export async function getCodes(): Promise<string[]> {
 export async function addCode(code: string) {
   await AsyncStorage.setItem(CODES, JSON.stringify([code, ...(await getCodes())]));
 }
-export async function getSeller(): Promise<SellerSession | null> {
-  try { return JSON.parse((await AsyncStorage.getItem(SELLER)) ?? 'null'); } catch { return null; }
+export async function getSession(): Promise<Session | null> {
+  try { return JSON.parse((await AsyncStorage.getItem(SESSION)) ?? 'null'); } catch { return null; }
 }
-export async function setSeller(s: SellerSession | null) {
-  if (s) await AsyncStorage.setItem(SELLER, JSON.stringify(s));
-  else await AsyncStorage.removeItem(SELLER);
+export async function setSession(s: Session | null) {
+  if (s) await AsyncStorage.setItem(SESSION, JSON.stringify(s));
+  else await AsyncStorage.removeItem(SESSION);
 }

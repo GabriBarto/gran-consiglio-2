@@ -12,7 +12,7 @@ export default function TabsLayout() {
     }}>
       <Tabs.Screen name="index" options={{ title: 'Scopri', headerTitle: '🌱 VerdeSalva', tabBarIcon: icon('🔎') }} />
       <Tabs.Screen name="prenotazioni" options={{ title: 'Prenotazioni', tabBarIcon: icon('🎟️') }} />
-      <Tabs.Screen name="venditori" options={{ title: 'Venditori', tabBarIcon: icon('🏪') }} />
+      <Tabs.Screen name="venditori" options={{ title: 'Account', headerTitle: 'Account', tabBarIcon: icon('👤') }} />
     </Tabs>
   );
 }

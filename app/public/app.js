@@ -33,8 +33,8 @@ const closeModal = () => ($('#modal').hidden = true);
 const store = {
   get codes() { try { return JSON.parse(localStorage.getItem('vs-codes') || '[]'); } catch { return []; } },
   addCode(c) { localStorage.setItem('vs-codes', JSON.stringify([c, ...this.codes])); },
-  get seller() { try { return JSON.parse(sessionStorage.getItem('vs-seller')); } catch { return null; } },
-  set seller(v) { v ? sessionStorage.setItem('vs-seller', JSON.stringify(v)) : sessionStorage.removeItem('vs-seller'); },
+  get session() { try { return JSON.parse(sessionStorage.getItem('vs-session')); } catch { return null; } },
+  set session(v) { v ? sessionStorage.setItem('vs-session', JSON.stringify(v)) : sessionStorage.removeItem('vs-session'); },
 };
 
 // ---------- Scopri ----------
@@ -64,6 +64,7 @@ async function home() {
   const load = async () => {
     const p = new URLSearchParams({ q: $('#q').value, city: $('#city').value, category: $('#cat').value });
     const offers = await api(`/api/offers?${p}`);
+    if (!$('#offers')) return;   // l'utente ha già cambiato pagina
     $('#offers').innerHTML = offers.length ? offers.map(card).join('')
       : '<div class="empty" style="grid-column:1/-1">Nessuna offerta al momento 🌧️<br>Riprova più tardi!</div>';
     document.querySelectorAll('[data-reserve]').forEach((b) => (b.onclick = () => reserveModal(offers.find((o) => o.id == b.dataset.reserve), load)));
@@ -131,32 +132,84 @@ async function bookings() {
   };
 }
 
-// ---------- Venditori ----------
-async function sellers() {
-  const s = store.seller;
-  if (s) return dashboard(s);
-  const shops = await api('/api/shops');
-  view.innerHTML = `<h1>Area venditori</h1>
-    <p>Trasforma l'invenduto in ricavo. Pubblica una sorpresa verde in meno di un minuto.</p>
+// ---------- Account (accesso, registrazione, area venditori) ----------
+async function logout() {
+  const s = store.session;
+  store.session = null;
+  if (s) await api('/api/auth/logout', { method: 'POST', token: s.token }).catch(() => {});
+  account();
+}
+
+async function account() {
+  const s = store.session;
+  if (!s) return authView();
+  let me;
+  try { me = await api('/api/auth/me', { token: s.token }); } catch { store.session = null; return authView(); }
+  store.session = { ...s, user: me.user, shop: me.shop };
+  if (me.user.must_change_password) return changePasswordView(store.session);
+  if (me.user.role === 'venditore') return dashboard(store.session);
+  view.innerHTML = `<h1>Ciao ${esc(me.user.username)} 👋</h1>
+    <div class="panel"><p>${me.user.role === 'admin'
+      ? 'Sei collegato come <b>amministratore</b>. Il pannello di gestione (licenze e moderazione) arriva con la Fase 3.'
+      : 'Sei collegato come <b>cliente</b>. Gli acquisti con carrello e pagamento arrivano con la Fase 1: per ora puoi prenotare dalla pagina Scopri.'}</p>
+      <button class="secondary" id="logout">Esci</button></div>`;
+  $('#logout').onclick = logout;
+}
+
+function authView(mode = 'login') {
+  const reg = mode === 'register';
+  view.innerHTML = `<h1>${reg ? 'Crea il tuo account' : 'Accedi'}</h1>
+    <p>Clienti e venditori: trasforma l'invenduto in ricavo, o salva una pianta a prezzo ridotto.</p>
     <div class="panel" style="max-width:460px">
-      <label style="margin-top:0">Il tuo negozio</label>
-      <select id="shop">${shops.map((x) => `<option value="${x.id}">${esc(x.emoji)} ${esc(x.name)} (${esc(x.city)})</option>`).join('')}</select>
-      <label>PIN</label><input id="pin" type="password" inputmode="numeric" placeholder="Demo: 1111, 2222, 3333…">
-      <p class="err" id="e"></p><button id="login">Accedi</button></div>`;
-  $('#login').onclick = async () => {
+      ${reg ? `<label style="margin-top:0">Sono un…</label>
+        <select id="a-role"><option value="cliente">Cliente</option><option value="venditore">Venditore (vivaio, fiorista, garden)</option></select>
+        <label>Nome utente</label><input id="a-user" autocomplete="username">` : ''}
+      <label${reg ? '' : ' style="margin-top:0"'}>Email</label><input id="a-email" type="email" autocomplete="email">
+      <label>Password</label><input id="a-pass" type="password" autocomplete="${reg ? 'new-password' : 'current-password'}" ${reg ? 'placeholder="Almeno 8 caratteri, lettere e numeri"' : ''}>
+      ${reg ? '<label>Ripeti la password</label><input id="a-pass2" type="password" autocomplete="new-password">' : ''}
+      <p class="err" id="a-err"></p>
+      <button id="a-go">${reg ? 'Registrati' : 'Accedi'}</button>
+      <p class="meta" style="margin-top:1rem">${reg ? 'Hai già un account?' : 'Non hai un account?'}
+        <a href="#/account" id="a-switch">${reg ? 'Accedi' : 'Registrati'}</a></p>
+      ${reg ? '' : '<p class="meta">Demo: <code>glicine@demo.it</code> / <code>demo1234</code> (venditore) · <code>cliente@demo.it</code> / <code>demo1234</code></p>'}
+    </div>`;
+  $('#a-switch').onclick = (e) => { e.preventDefault(); authView(reg ? 'login' : 'register'); };
+  $('#a-go').onclick = async () => {
     try {
-      const r = await api('/api/seller/login', { method: 'POST', body: { shop_id: $('#shop').value, pin: $('#pin').value } });
-      store.seller = r; sellers();
-    } catch (e) { $('#e').textContent = e.message; }
+      const body = { email: $('#a-email').value, password: $('#a-pass').value };
+      if (reg) Object.assign(body, { role: $('#a-role').value, username: $('#a-user').value, password_confirm: $('#a-pass2').value });
+      store.session = await api(reg ? '/api/auth/register' : '/api/auth/login', { method: 'POST', body });
+      account();
+    } catch (e) { $('#a-err').textContent = e.message; }
+  };
+}
+
+function changePasswordView(s) {
+  view.innerHTML = `<h1>Scegli una nuova password</h1><p>Per sicurezza devi cambiare la password iniziale prima di continuare.</p>
+    <div class="panel" style="max-width:460px">
+      <label style="margin-top:0">Password attuale</label><input id="p0" type="password">
+      <label>Nuova password</label><input id="p1" type="password" placeholder="Almeno 8 caratteri, lettere e numeri">
+      <label>Ripeti la nuova password</label><input id="p2" type="password">
+      <p class="err" id="p-err"></p><button id="p-go">Cambia password</button></div>`;
+  $('#p-go').onclick = async () => {
+    try {
+      await api('/api/auth/change-password', { method: 'POST', token: s.token, body: { current_password: $('#p0').value, new_password: $('#p1').value, new_password_confirm: $('#p2').value } });
+      toast('Password aggiornata'); account();
+    } catch (e) { $('#p-err').textContent = e.message; }
   };
 }
 
 async function dashboard(s) {
   let d;
-  try { d = await api('/api/seller/dashboard', { token: s.token }); } catch { store.seller = null; return sellers(); }
+  try { d = await api('/api/seller/dashboard', { token: s.token }); }
+  catch (e) {
+    view.innerHTML = `<h1>Area venditori</h1><div class="panel"><p>${esc(e.message)}.</p>
+      <p class="meta">La registrazione del negozio (dati, orari e partita IVA) arriva con la Fase 2.</p><button class="secondary" id="logout">Esci</button></div>`;
+    $('#logout').onclick = logout; return;
+  }
   view.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
-      <h1>${esc(s.shop.emoji)} ${esc(s.shop.name)}</h1><button class="secondary" id="logout">Esci</button></div>
+      <h1>${esc(d.shop.emoji)} ${esc(d.shop.name)}</h1><button class="secondary" id="logout">Esci</button></div>
     <div class="stats" style="margin:.5rem 0 1.2rem">
       <div class="panel stat" style="color:var(--ink);background:#fff;margin:0"><b>${d.plantsSaved}</b><span>piante salvate</span></div>
       <div class="panel stat" style="color:var(--ink);background:#fff;margin:0"><b>${eur(d.revenueCents)}</b><span>ricavi recuperati</span></div>
@@ -184,7 +237,7 @@ async function dashboard(s) {
     </div>
     <div class="panel"><h2>Le tue offerte</h2><table><tr><th>Offerta</th><th>Prezzo</th><th>Prenotate</th><th>Ritiro fino alle</th></tr>
       ${d.offers.map((o) => `<tr><td>${esc(o.emoji)} ${esc(o.title)}</td><td>${eur(o.price_cents)}</td><td>${o.reserved}/${o.quantity}</td><td>${day(o.pickup_end)} ${hhmm(o.pickup_end)}</td></tr>`).join('')}</table></div>`;
-  $('#logout').onclick = () => { store.seller = null; sellers(); };
+  $('#logout').onclick = logout;
   $('#n-ok').onclick = async () => {
     try {
       await api('/api/seller/offers', { method: 'POST', token: s.token, body: {
@@ -202,7 +255,7 @@ async function dashboard(s) {
 }
 
 // ---------- router ----------
-const routes = { '': home, prenotazioni: bookings, venditori: sellers };
+const routes = { '': home, prenotazioni: bookings, account, venditori: account };
 async function router() {
   const key = location.hash.replace(/^#\/?/, '');
   document.querySelectorAll('nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === (key || 'home')));
@@ -215,5 +268,5 @@ router();
 api('/api/config').then((c) => {
   if (!c.demo) return;
   const b = $('#reset-demo'); b.hidden = false;
-  b.onclick = async () => { await api('/api/demo/reset', { method: 'POST' }); localStorage.clear(); store.seller = null; toast('Dati demo ripristinati'); router(); };
+  b.onclick = async () => { await api('/api/demo/reset', { method: 'POST' }); localStorage.clear(); store.session = null; toast('Dati demo ripristinati'); router(); };
 });

@@ -12,9 +12,10 @@ export type Reservation = {
   price_cents: number; pickup_start: string; pickup_end: string; shop_name: string; address: string; city: string;
 };
 export type Stats = { plantsSaved: number; shops: number; moneySavedCents: number; sellerRevenueCents: number };
-export type Shop = { id: number; name: string; type: string; city: string; emoji: string };
-export type SellerSession = { token: string; shop: Omit<Shop, 'type'> };
+export type User = { id: number; username: string; email: string; role: 'cliente' | 'venditore' | 'admin'; must_change_password: boolean };
+export type Session = { token: string; user: User; shop: { id: number; name: string; emoji: string; city: string; license_status: string } | null };
 export type Dashboard = {
+  shop: { id: number; name: string; emoji: string; license_status: string };
   offers: Offer[]; plantsSaved: number; revenueCents: number;
   reservations: { code: string; name: string; qty: number; status: string; title: string }[];
 };

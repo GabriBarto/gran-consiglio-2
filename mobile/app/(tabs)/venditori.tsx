@@ -1,68 +1,135 @@
 import { useCallback, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { api, ApiError, Dashboard, SellerSession, Shop } from '../../lib/api';
+import { api, ApiError, Dashboard, Session } from '../../lib/api';
 import { eur, day, hhmm } from '../../lib/format';
 import { takeScannedCode } from '../../lib/scan';
-import { getSeller, setSeller } from '../../lib/storage';
+import { getSession, setSession } from '../../lib/storage';
 import { CATEGORIES, colors } from '../../lib/theme';
 import { Button, Chip, ErrorText, Field, Panel, Tag } from '../../components/ui';
 
-export default function Venditori() {
-  const [session, setSession] = useState<SellerSession | null>(null);
+export default function Account() {
+  const [session, setSessionState] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
 
-  useFocusEffect(useCallback(() => { getSeller().then((s) => { setSession(s); setReady(true); }); }, []));
+  const update = useCallback(async (s: Session | null) => { await setSession(s); setSessionState(s); }, []);
+  const logout = useCallback(async () => {
+    const s = await getSession();
+    await update(null);
+    if (s) api('/api/auth/logout', { method: 'POST', token: s.token }).catch(() => {});
+  }, [update]);
+
+  // a ogni apertura della scheda ricontrolla la sessione sul server (scaduta? sospesa? cambio password?)
+  useFocusEffect(useCallback(() => {
+    (async () => {
+      const s = await getSession();
+      if (s) {
+        try { const me = await api<{ user: Session['user']; shop: Session['shop'] }>('/api/auth/me', { token: s.token }); await update({ ...s, ...me }); }
+        catch { await update(null); }
+      } else setSessionState(null);
+      setReady(true);
+    })();
+  }, [update]));
 
   if (!ready) return <View />;
-  if (!session) return <Login onLogin={async (s) => { await setSeller(s); setSession(s); }} />;
-  return <SellerDashboard session={session} onLogout={async () => { await setSeller(null); setSession(null); }} />;
-}
-
-function Login({ onLogin }: { onLogin: (s: SellerSession) => void }) {
-  const [shops, setShops] = useState<Shop[]>([]);
-  const [shopId, setShopId] = useState<number | null>(null);
-  const [pin, setPin] = useState('');
-  const [error, setError] = useState('');
-
-  useFocusEffect(useCallback(() => {
-    api<Shop[]>('/api/shops').then((s) => { setShops(s); setShopId((cur) => cur ?? s[0]?.id ?? null); setError(''); })
-      .catch((e) => setError(e.message));
-  }, []));
-
-  async function login() {
-    try { onLogin(await api<SellerSession>('/api/seller/login', { method: 'POST', body: { shop_id: shopId, pin } })); }
-    catch (e) { setError((e as Error).message); }
-  }
-
+  if (!session) return <AuthForm onDone={update} />;
+  if (session.user.must_change_password) return <ChangePassword session={session} onDone={() => update({ ...session, user: { ...session.user, must_change_password: false } })} />;
+  if (session.user.role === 'venditore') return <SellerDashboard session={session} onLogout={logout} />;
   return (
-    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
-      <Text style={s.h1}>Area venditori</Text>
-      <Text style={s.muted}>Trasforma l'invenduto in ricavo: pubblica una sorpresa verde in meno di un minuto.</Text>
+    <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <Text style={s.h1}>Ciao {session.user.username} 👋</Text>
       <Panel style={{ marginTop: 16 }}>
-        <Text style={s.label}>Il tuo negozio</Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 12 }}>
-          {shops.map((x) => <Chip key={x.id} label={`${x.emoji} ${x.name}`} active={shopId === x.id} onPress={() => setShopId(x.id)} />)}
-        </ScrollView>
-        <Field label="PIN" value={pin} onChangeText={setPin} secureTextEntry keyboardType="number-pad" placeholder="Demo: 1111, 2222, 3333…" />
-        <ErrorText>{error}</ErrorText>
-        <Button title="Accedi" onPress={login} />
+        <Text style={{ marginBottom: 12 }}>
+          {session.user.role === 'admin'
+            ? 'Sei collegato come amministratore. Il pannello di gestione arriva con la Fase 3.'
+            : 'Sei collegato come cliente. Carrello e pagamento arrivano con la Fase 1: per ora prenota dalla scheda Scopri.'}
+        </Text>
+        <Button title="Esci" variant="secondary" onPress={logout} />
       </Panel>
     </ScrollView>
   );
 }
 
-function SellerDashboard({ session, onLogout }: { session: SellerSession; onLogout: () => void }) {
+function AuthForm({ onDone }: { onDone: (s: Session) => void }) {
+  const [register, setRegister] = useState(false);
+  const [role, setRole] = useState<'cliente' | 'venditore'>('cliente');
+  const [f, setF] = useState({ username: '', email: '', password: '', password_confirm: '' });
+  const [error, setError] = useState('');
+  const set = (k: keyof typeof f) => (v: string) => setF({ ...f, [k]: v });
+
+  async function submit() {
+    try {
+      const body = register ? { ...f, role } : { email: f.email, password: f.password };
+      onDone(await api<Session>(register ? '/api/auth/register' : '/api/auth/login', { method: 'POST', body }));
+    } catch (e) { setError((e as Error).message); }
+  }
+
+  return (
+    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+      <Text style={s.h1}>{register ? 'Crea il tuo account' : 'Accedi'}</Text>
+      <Text style={s.muted}>Clienti e venditori: trasforma l'invenduto in ricavo, o salva una pianta a prezzo ridotto.</Text>
+      <Panel style={{ marginTop: 16 }}>
+        {register && (
+          <>
+            <Text style={s.label}>Sono un…</Text>
+            <View style={{ flexDirection: 'row', marginBottom: 12 }}>
+              <Chip label="Cliente" active={role === 'cliente'} onPress={() => setRole('cliente')} />
+              <Chip label="Venditore" active={role === 'venditore'} onPress={() => setRole('venditore')} />
+            </View>
+            <Field label="Nome utente" value={f.username} onChangeText={set('username')} autoCapitalize="none" />
+          </>
+        )}
+        <Field label="Email" value={f.email} onChangeText={set('email')} keyboardType="email-address" autoCapitalize="none" autoComplete="email" />
+        <Field label="Password" value={f.password} onChangeText={set('password')} secureTextEntry placeholder={register ? 'Almeno 8 caratteri, lettere e numeri' : undefined} />
+        {register && <Field label="Ripeti la password" value={f.password_confirm} onChangeText={set('password_confirm')} secureTextEntry />}
+        <ErrorText>{error}</ErrorText>
+        <Button title={register ? 'Registrati' : 'Accedi'} onPress={submit} />
+        <View style={{ height: 10 }} />
+        <Button title={register ? 'Ho già un account' : 'Crea un account'} variant="secondary" onPress={() => { setRegister(!register); setError(''); }} />
+        {!register && <Text style={[s.muted, { marginTop: 12, fontSize: 12 }]}>Demo: glicine@demo.it / demo1234 (venditore) · cliente@demo.it / demo1234</Text>}
+      </Panel>
+    </ScrollView>
+  );
+}
+
+function ChangePassword({ session, onDone }: { session: Session; onDone: () => void }) {
+  const [f, setF] = useState({ current_password: '', new_password: '', new_password_confirm: '' });
+  const [error, setError] = useState('');
+  const set = (k: keyof typeof f) => (v: string) => setF({ ...f, [k]: v });
+  async function submit() {
+    try { await api('/api/auth/change-password', { method: 'POST', token: session.token, body: f }); onDone(); }
+    catch (e) { setError((e as Error).message); }
+  }
+  return (
+    <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
+      <Text style={s.h1}>Scegli una nuova password</Text>
+      <Text style={s.muted}>Per sicurezza devi cambiare la password iniziale prima di continuare.</Text>
+      <Panel style={{ marginTop: 16 }}>
+        <Field label="Password attuale" value={f.current_password} onChangeText={set('current_password')} secureTextEntry />
+        <Field label="Nuova password" value={f.new_password} onChangeText={set('new_password')} secureTextEntry />
+        <Field label="Ripeti la nuova password" value={f.new_password_confirm} onChangeText={set('new_password_confirm')} secureTextEntry />
+        <ErrorText>{error}</ErrorText>
+        <Button title="Cambia password" onPress={submit} />
+      </Panel>
+    </ScrollView>
+  );
+}
+
+function SellerDashboard({ session, onLogout }: { session: Session; onLogout: () => void }) {
   const [d, setD] = useState<Dashboard | null>(null);
   const [code, setCode] = useState('');
   const [rdError, setRdError] = useState('');
   const [f, setF] = useState({ title: '', description: '', category: 'piante', original_price: '', price: '', quantity: '5', pickup_hours: '4' });
   const [nError, setNError] = useState('');
+  const [blocked, setBlocked] = useState('');
   const token = session.token;
 
   const load = useCallback(async () => {
     try { setD(await api<Dashboard>('/api/seller/dashboard', { token })); }
-    catch (e) { if (e instanceof ApiError && e.status === 401) onLogout(); }
+    catch (e) {
+      if (e instanceof ApiError && e.status === 401) onLogout();
+      else if (e instanceof ApiError && e.status === 403) setBlocked(e.message);
+    }
   }, [token, onLogout]);
 
   const redeem = useCallback(async (c: string) => {
@@ -93,9 +160,18 @@ function SellerDashboard({ session, onLogout }: { session: SellerSession; onLogo
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }} keyboardShouldPersistTaps="handled">
       <View style={s.row}>
-        <Text style={s.h1}>{session.shop.emoji} {session.shop.name}</Text>
+        <Text style={s.h1}>{d ? `${d.shop.emoji} ${d.shop.name}` : `🏪 ${session.user.username}`}</Text>
       </View>
       <Button title="Esci" variant="secondary" onPress={onLogout} style={{ alignSelf: 'flex-start', marginBottom: 12, paddingVertical: 8 }} />
+
+      {blocked ? (
+        <Panel>
+          <Text style={{ fontWeight: '700', marginBottom: 6 }}>{blocked}.</Text>
+          <Text style={s.muted}>La registrazione del negozio (dati, orari e partita IVA) arriva con la Fase 2.</Text>
+        </Panel>
+      ) : d && d.shop.license_status !== 'approved' ? (
+        <Panel><Text style={s.muted}>La tua attività è in attesa di verifica: potrai pubblicare le box dopo l'approvazione.</Text></Panel>
+      ) : null}
 
       <View style={s.stats}>
         <Panel style={s.stat}><Text style={s.statN}>{d?.plantsSaved ?? '–'}</Text><Text style={s.muted}>piante salvate</Text></Panel>
