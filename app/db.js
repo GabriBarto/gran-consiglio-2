@@ -1,60 +1,64 @@
-import { DatabaseSync } from 'node:sqlite';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import pg from 'pg';
 
-const file = process.env.DB_PATH || './data/verdesalva.db';
-fs.mkdirSync(path.dirname(file), { recursive: true });
+const dir = path.dirname(fileURLToPath(import.meta.url));
 
-export const db = new DatabaseSync(file);
-db.exec('PRAGMA journal_mode = WAL; PRAGMA foreign_keys = ON;');
+export const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL || 'postgres://verdesalva:verdesalva@localhost:5432/verdesalva',
+});
 
-db.exec(`
-CREATE TABLE IF NOT EXISTS shops (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT NOT NULL,
-  type TEXT NOT NULL,            -- vivaio | fiorista | garden
-  city TEXT NOT NULL,
-  address TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  emoji TEXT NOT NULL DEFAULT '🌿',
-  pin TEXT NOT NULL
-);
-CREATE TABLE IF NOT EXISTS offers (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  shop_id INTEGER NOT NULL REFERENCES shops(id),
-  title TEXT NOT NULL,
-  description TEXT NOT NULL DEFAULT '',
-  category TEXT NOT NULL,        -- piante | fiori | erbe | piante-da-frutto | succulente
-  emoji TEXT NOT NULL DEFAULT '🪴',
-  original_price_cents INTEGER NOT NULL,
-  price_cents INTEGER NOT NULL,
-  quantity INTEGER NOT NULL,
-  reserved INTEGER NOT NULL DEFAULT 0,
-  pickup_start TEXT NOT NULL,
-  pickup_end TEXT NOT NULL,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-CREATE TABLE IF NOT EXISTS reservations (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  offer_id INTEGER NOT NULL REFERENCES offers(id),
-  code TEXT NOT NULL UNIQUE,
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  qty INTEGER NOT NULL,
-  status TEXT NOT NULL DEFAULT 'reserved',  -- reserved | collected
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-`);
+export const query = (text, params) => pool.query(text, params);
 
-/** Esegue fn dentro una transazione. */
-export function tx(fn) {
-  db.exec('BEGIN IMMEDIATE');
+/** Esegue fn(client) in una transazione. */
+export async function tx(fn) {
+  const client = await pool.connect();
   try {
-    const r = fn();
-    db.exec('COMMIT');
-    return r;
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
   } catch (e) {
-    db.exec('ROLLBACK');
+    await client.query('ROLLBACK');
     throw e;
+  } finally {
+    client.release();
+  }
+}
+
+/** Attende che il database accetti connessioni (all'avvio di Docker Compose può servire qualche secondo). */
+export async function waitForDb(retries = 20) {
+  for (let i = 1; ; i++) {
+    try { await pool.query('SELECT 1'); return; }
+    catch (e) {
+      if (i >= retries) throw e;
+      console.log(`Database non pronto (${i}/${retries}), riprovo…`);
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  }
+}
+
+/** Applica in ordine i file migrations/*.sql non ancora eseguiti. */
+export async function migrate() {
+  const files = fs.readdirSync(path.join(dir, 'migrations')).filter((f) => f.endsWith('.sql')).sort();
+  const client = await pool.connect();
+  try {
+    await client.query('SELECT pg_advisory_lock(727274)');   // evita corse tra più istanze
+    await client.query('CREATE TABLE IF NOT EXISTS schema_migrations (name TEXT PRIMARY KEY, applied_at TIMESTAMPTZ NOT NULL DEFAULT now())');
+    const done = new Set((await client.query('SELECT name FROM schema_migrations')).rows.map((r) => r.name));
+    for (const f of files) {
+      if (done.has(f)) continue;
+      await client.query('BEGIN');
+      try {
+        await client.query(fs.readFileSync(path.join(dir, 'migrations', f), 'utf8'));
+        await client.query('INSERT INTO schema_migrations (name) VALUES ($1)', [f]);
+        await client.query('COMMIT');
+        console.log(`Migrazione applicata: ${f}`);
+      } catch (e) { await client.query('ROLLBACK'); throw e; }
+    }
+  } finally {
+    await client.query('SELECT pg_advisory_unlock(727274)').catch(() => {});
+    client.release();
   }
 }

@@ -1,6 +1,6 @@
 # VerdeSalva – app mobile (Expo / React Native)
 
-Un'unica app con tre sezioni: **Scopri** e **Prenotazioni** per i clienti, **Venditori** per vivai e fioristi.
+Un'unica app con tre sezioni: **Scopri** e **Prenotazioni** per i clienti, **Account** per accedere o registrarsi (cliente o venditore) e gestire il negozio.
 
 - Il cliente prenota e riceve un **QR code** di ritiro.
 - Il venditore lo **scansiona con la fotocamera** (o digita il codice) per confermare il ritiro.
@@ -33,11 +33,11 @@ Su Windows il firewall può bloccare la porta 8080: consenti l'accesso quando Wi
 app/                 schermate (Expo Router)
   (tabs)/index.tsx         Scopri: offerte, filtri, statistiche
   (tabs)/prenotazioni.tsx  prenotazioni salvate sul telefono
-  (tabs)/venditori.tsx     login PIN, dashboard, nuova offerta, conferma ritiro
+  (tabs)/venditori.tsx     accesso/registrazione, dashboard venditore, nuova offerta, conferma ritiro
   offerta/[id].tsx         dettaglio e prenotazione
   prenotazione/[code].tsx  QR di ritiro
   scanner.tsx              scansione QR (venditore)
 components/ lib/     UI condivisa, client API, formattazione, storage
 ```
 
-PIN demo dei negozi: `1111`, `2222`, `3333`, `4444`, `5555`.
+Account demo (password `demo1234`): venditore `glicine@demo.it`, cliente `cliente@demo.it`.

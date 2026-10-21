@@ -1,16 +1,37 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: verdesalva-db
+    environment:
+      POSTGRES_USER: verdesalva
+      POSTGRES_PASSWORD: "${DB_PASSWORD:-verdesalva}"
+      POSTGRES_DB: verdesalva
+    volumes:
+      - verdesalva-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U verdesalva -d verdesalva"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
   verdesalva:
     build: .
     image: verdesalva:latest
     container_name: verdesalva
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "${APP_PORT:-8080}:3000"
     environment:
-      DEMO_MODE: "${DEMO_MODE:-true}"        # mostra il pulsante "Reset dati demo"
-      RESET_DEMO: "${RESET_DEMO:-false}"     # true = ricrea i dati demo a ogni avvio
-    volumes:
-      - verdesalva-data:/data
+      DATABASE_URL: "postgres://verdesalva:${DB_PASSWORD:-verdesalva}@db:5432/verdesalva"
+      DEMO_MODE: "${DEMO_MODE:-true}"          # dati demo + pulsante "Reset dati demo"
+      RESET_DEMO: "${RESET_DEMO:-false}"       # true = ricrea i dati demo a ogni avvio
+      SERVICE_FEE_CENTS: "${SERVICE_FEE_CENTS:-100}"   # tariffa fissa per box venduta (da stabilire)
+      ADMIN_EMAIL: "${ADMIN_EMAIL:-}"          # admin iniziale (password da cambiare al primo accesso)
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
     restart: unless-stopped
 
 volumes:
-  verdesalva-data:
+  verdesalva-pgdata:
