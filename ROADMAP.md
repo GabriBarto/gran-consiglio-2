@@ -7,12 +7,12 @@ Le durate sono stime indicative per un gruppo di 5 persone e vanno riviste con i
 
 | User story | Stato |
 |---|---|
-| Navigare e cercare negozi/offerte per **città** e testo | Parziale (manca la distanza; le coordinate dei negozi sono già nel modello dati) |
+| Navigare e cercare negozi/offerte per **città**, testo e distanza | Fatto in Fase 1 |
 | Vedere le box con descrizione e prezzo | Fatto |
-| Prenotare e ritirare in negozio con codice/QR | Fatto (senza account, senza pagamento) |
+| Carrello, pagamento simulato, email di conferma, ritiro con codice | Fatto in Fase 1 (l'app mobile usa ancora la vecchia prenotazione da ospite, rimossa dal backend) |
 | Venditore: creare box, confermare il ritiro | Parziale (account con email e password; manca la registrazione completa del negozio) |
 | Account (registrazione, login, logout, ruoli) | Fatto in Fase 0 |
-| Carrello, pagamento, email, recensioni, notifiche, verifica P.IVA, pannello super admin | Da fare |
+| Recensioni, notifiche, verifica P.IVA, pannello super admin | Da fare |
 
 ## Fase 0 – Fondamenta (2 settimane) ✅ completata
 Serve a tutto il resto. Fatto: PostgreSQL in Docker, migrazioni, nuovo modello dati (utenti, negozi, licenze, box, ordini, recensioni), registrazione/login/logout/cambio password, ruoli e sospensione, test automatici. Le regole aperte (vedi sotto) restano da decidere prima delle fasi 1 e 2.
@@ -21,13 +21,13 @@ Serve a tutto il resto. Fatto: PostgreSQL in Docker, migrazioni, nuovo modello d
 - Passare da SQLite a **PostgreSQL** nel `docker-compose.yml`.
 - Autenticazione vera: registrazione, login, logout, password cifrate, sessioni/token.
 
-## Fase 1 – Clienti (3 settimane)
+## Fase 1 – Clienti (3 settimane) ✅ completata
 - Registrazione con nome utente, email, password e conferma password.
 - Ricerca negozi per **distanza**, città e nome; pagina del negozio (indirizzo, orari di apertura e di ritiro, box).
 - Utente non registrato: può navigare; al momento dell'acquisto viene portato alla registrazione e poi **riportato alla box** che stava guardando.
 - Scelta del tipo di utente in fase di registrazione.
 - Carrello per negozio, con limite alle box disponibili.
-- Pagamento (inizialmente simulato, poi Stripe) e **email di conferma** con riepilogo e modalità di ritiro.
+- Pagamento (simulato in `app/lib/payment.js`, da sostituire con Stripe) e **email di conferma** con riepilogo e modalità di ritiro.
 - Ritiro in negozio nella fascia oraria indicata.
 
 ## Fase 2 – Venditori (3 settimane)

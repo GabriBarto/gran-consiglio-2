@@ -67,3 +67,6 @@ th, td { text-align: left; padding: .5rem .4rem; border-bottom: 1px solid var(--
 .modal .box { background: #fff; border-radius: 20px; padding: 1.6rem; max-width: 460px; width: 100%; max-height: 92vh; overflow: auto; }
 .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--green-d); color: #fff; padding: .8rem 1.3rem; border-radius: 99px; z-index: 30; font-weight: 600; }
 @media (max-width: 600px) { main { padding: 1rem; } .hero { padding: 1.6rem 1.2rem; } }
+a.btn { display: inline-block; text-decoration: none; text-align: center; }
+a.btn:hover { background: var(--green-d); }
+.card a.btn { width: 100%; box-sizing: border-box; margin-top: .4rem; }
