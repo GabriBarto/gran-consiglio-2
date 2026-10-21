@@ -93,4 +93,4 @@ La variabile `SERVICE_FEE_CENTS` (default 100) è la tariffa fissa trattenuta pe
 Pagamento ed email sono simulati: la carta `4000 0000 0000 0002` viene rifiutata, qualsiasi altra carta di 16 cifre passa; le email sono salvate nella tabella `emails` (e nel log) finché non c'è un server SMTP.
 
 > Nota: è un prototipo. Restano da realizzare, come da [`ROADMAP.md`](ROADMAP.md), Stripe e SMTP veri,
-> l'aggiornamento dell'app mobile al nuovo flusso con carrello, registrazione completa del negozio con partita IVA, pannello admin e recensioni.
+> registrazione completa del negozio con partita IVA, pannello admin e recensioni.

@@ -9,7 +9,7 @@ Le durate sono stime indicative per un gruppo di 5 persone e vanno riviste con i
 |---|---|
 | Navigare e cercare negozi/offerte per **città**, testo e distanza | Fatto in Fase 1 |
 | Vedere le box con descrizione e prezzo | Fatto |
-| Carrello, pagamento simulato, email di conferma, ritiro con codice | Fatto in Fase 1 (l'app mobile usa ancora la vecchia prenotazione da ospite, rimossa dal backend) |
+| Carrello, pagamento simulato, email di conferma, ritiro con codice | Fatto in Fase 1 (web e app mobile) |
 | Venditore: creare box, confermare il ritiro | Parziale (account con email e password; manca la registrazione completa del negozio) |
 | Account (registrazione, login, logout, ruoli) | Fatto in Fase 0 |
 | Recensioni, notifiche, verifica P.IVA, pannello super admin | Da fare |
