@@ -8,7 +8,8 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <Stack screenOptions={{ headerTintColor: colors.greenDark, headerStyle: { backgroundColor: '#fff' }, contentStyle: { backgroundColor: colors.cream } }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="offerta/[id]" options={{ title: 'Prenota', presentation: 'modal' }} />
+        <Stack.Screen name="offerta/[id]" options={{ title: 'Offerta', presentation: 'modal' }} />
+        <Stack.Screen name="negozio/[id]" options={{ title: 'Negozio' }} />
         <Stack.Screen name="prenotazione/[code]" options={{ title: 'Il tuo codice' }} />
         <Stack.Screen name="scanner" options={{ title: 'Scansiona il QR', presentation: 'modal' }} />
       </Stack>

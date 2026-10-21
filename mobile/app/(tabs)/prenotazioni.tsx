@@ -1,49 +1,49 @@
 import { useCallback, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { router, useFocusEffect } from 'expo-router';
-import { api, Reservation } from '../../lib/api';
-import { slot } from '../../lib/format';
-import { getCodes } from '../../lib/storage';
+import { api, Order, Session } from '../../lib/api';
+import { eur, slot } from '../../lib/format';
+import { getSession, setNext } from '../../lib/storage';
 import { colors, radius } from '../../lib/theme';
-import { Button, Empty, ErrorText, Field, Tag } from '../../components/ui';
+import { Button, Empty, ErrorText, Tag } from '../../components/ui';
 
-export default function Prenotazioni() {
-  const [items, setItems] = useState<Reservation[]>([]);
-  const [code, setCode] = useState('');
+export default function Ordini() {
+  const [session, setSession] = useState<Session | null>(null);
+  const [items, setItems] = useState<Order[]>([]);
   const [error, setError] = useState('');
 
   useFocusEffect(useCallback(() => {
     (async () => {
-      const codes = await getCodes();
-      const all = await Promise.all(codes.map((c) => api<Reservation>(`/api/reservations/${c}`).catch(() => null)));
-      setItems(all.filter((r): r is Reservation => r !== null));
+      const s = await getSession();
+      setSession(s);
+      if (s?.user.role !== 'cliente') return;
+      try { setItems(await api<Order[]>('/api/orders', { token: s.token })); setError(''); } catch (e) { setError((e as Error).message); }
     })();
   }, []));
 
-  async function search() {
-    try { await api(`/api/reservations/${code.trim().toUpperCase()}`); setError(''); router.push(`/prenotazione/${code.trim().toUpperCase()}`); }
-    catch (e) { setError((e as Error).message); }
+  if (!session) {
+    return (
+      <View style={{ padding: 16 }}>
+        <Empty>Accedi per vedere i tuoi ordini 🎟️</Empty>
+        <Button title="Accedi / Registrati" onPress={async () => { await setNext('/(tabs)/prenotazioni'); router.navigate('/(tabs)/venditori'); }} />
+      </View>
+    );
   }
+  if (session.user.role !== 'cliente') return <View style={{ padding: 16 }}><Empty>Solo gli account cliente hanno ordini.</Empty></View>;
 
   return (
     <FlatList
       data={items}
       keyExtractor={(r) => r.code}
       contentContainerStyle={{ padding: 16 }}
-      ListHeaderComponent={
-        <View style={{ marginBottom: 12 }}>
-          <Field label="Hai un codice? Cercalo" value={code} onChangeText={setCode} autoCapitalize="characters" placeholder="VS-XXXXXX" />
-          <ErrorText>{error}</ErrorText>
-          <Button title="Cerca" variant="secondary" onPress={search} />
-        </View>
-      }
-      ListEmptyComponent={<Empty>Nessuna prenotazione ancora 🌱</Empty>}
+      ListHeaderComponent={<ErrorText>{error}</ErrorText>}
+      ListEmptyComponent={<Empty>Nessun ordine ancora 🌱</Empty>}
       renderItem={({ item: r }) => (
         <Pressable style={s.card} onPress={() => router.push(`/prenotazione/${r.code}`)}>
-          <Tag done={r.status === 'collected'}>{r.status === 'collected' ? 'Ritirata' : 'Da ritirare'}</Tag>
-          <Text style={s.title}>{r.emoji} {r.title} × {r.qty}</Text>
-          <Text style={s.meta}>{r.shop_name} · {r.city}</Text>
-          <Text style={s.meta}>🕒 {slot(r.pickup_start, r.pickup_end)}</Text>
+          <Tag done={r.status === 'collected'}>{r.status === 'collected' ? 'Ritirato' : 'Pagato · da ritirare'}</Tag>
+          {r.items.map((i, k) => <Text key={k} style={s.title}>{i.emoji} {i.qty}× {i.title}</Text>)}
+          <Text style={s.meta}>{r.shop_name} · {r.city} · {eur(r.total_cents)}</Text>
+          <Text style={s.meta}>🕒 {slot(r.items[0].pickup_start, r.items[0].pickup_end)}</Text>
           <Text style={s.code}>{r.code}</Text>
         </Pressable>
       )}

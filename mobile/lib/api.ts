@@ -6,10 +6,29 @@ export type Offer = {
   original_price_cents: number; price_cents: number; quantity: number; reserved: number; available: number;
   pickup_start: string; pickup_end: string;
   shop_name: string; shop_type: string; city: string; address: string; shop_emoji: string;
+  allergens?: string[]; distance_km?: number | null;
 };
 export type Reservation = {
-  code: string; name: string; qty: number; status: 'reserved' | 'collected'; title: string; emoji: string;
+  code: string; name: string; qty: number; status: 'reserved' | 'paid' | 'collected'; title: string; emoji: string;
   price_cents: number; pickup_start: string; pickup_end: string; shop_name: string; address: string; city: string;
+};
+export type CartItem = {
+  box_id: number; title: string; emoji: string; qty: number; price_cents: number; available: number;
+  pickup_start: string; pickup_end: string; ok: boolean;
+};
+export type Cart = {
+  shop: { id: number; name: string; address: string; city: string } | null;
+  items: CartItem[]; total_cents: number; savings_cents: number;
+};
+export type Order = {
+  code: string; status: 'reserved' | 'paid' | 'collected' | 'cancelled'; total_cents: number;
+  shop_name: string; address: string; city: string;
+  items: { title: string; emoji: string; qty: number; pickup_start: string; pickup_end: string }[];
+};
+export type Shop = {
+  id: number; name: string; emoji: string; description: string; address: string; city: string; phone: string | null;
+  opening_time: string | null; closing_time: string | null; pickup_start: string | null; pickup_end: string | null;
+  open_boxes: number; distance_km?: number | null;
 };
 export type Stats = { plantsSaved: number; shops: number; moneySavedCents: number; sellerRevenueCents: number };
 export type User = { id: number; username: string; email: string; role: 'cliente' | 'venditore' | 'admin'; must_change_password: boolean };

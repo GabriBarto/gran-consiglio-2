@@ -15,14 +15,14 @@ export default function Codice() {
 
   return (
     <ScrollView contentContainerStyle={{ padding: 20, alignItems: 'center' }}>
-      {r && <Text style={{ fontSize: 22, fontWeight: '800', textAlign: 'center' }}>Prenotazione confermata 🎉</Text>}
+      {r && <Text style={{ fontSize: 22, fontWeight: '800', textAlign: 'center' }}>Ordine confermato 🎉</Text>}
       <View style={s.qr}><QRCode value={String(code)} size={200} /></View>
       <Text style={s.code}>{code}</Text>
       <Text style={s.hint}>Mostra questo codice in negozio</Text>
       <ErrorText>{error}</ErrorText>
       {r && (
         <View style={s.info}>
-          <Tag done={r.status === 'collected'}>{r.status === 'collected' ? 'Ritirata' : 'Da ritirare'}</Tag>
+          <Tag done={r.status === 'collected'}>{r.status === 'collected' ? 'Ritirato' : 'Pagato · da ritirare'}</Tag>
           <Text style={s.title}>{r.emoji} {r.title} × {r.qty}</Text>
           <Text style={s.meta}>{r.shop_name} · {r.address}, {r.city}</Text>
           <Text style={s.meta}>🕒 {slot(r.pickup_start, r.pickup_end)}</Text>

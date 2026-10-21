@@ -4,7 +4,7 @@ import { router, useFocusEffect } from 'expo-router';
 import { api, ApiError, Dashboard, Session } from '../../lib/api';
 import { eur, day, hhmm } from '../../lib/format';
 import { takeScannedCode } from '../../lib/scan';
-import { getSession, setSession } from '../../lib/storage';
+import { getSession, setSession, takeNext } from '../../lib/storage';
 import { CATEGORIES, colors } from '../../lib/theme';
 import { Button, Chip, ErrorText, Field, Panel, Tag } from '../../components/ui';
 
@@ -12,7 +12,11 @@ export default function Account() {
   const [session, setSessionState] = useState<Session | null>(null);
   const [ready, setReady] = useState(false);
 
-  const update = useCallback(async (s: Session | null) => { await setSession(s); setSessionState(s); }, []);
+  const update = useCallback(async (s: Session | null) => {
+    await setSession(s); setSessionState(s);
+    // dopo l'accesso di un cliente torna alla box che stava guardando
+    if (s?.user.role === 'cliente') { const next = await takeNext(); if (next) router.push(next as never); }
+  }, []);
   const logout = useCallback(async () => {
     const s = await getSession();
     await update(null);
@@ -42,7 +46,7 @@ export default function Account() {
         <Text style={{ marginBottom: 12 }}>
           {session.user.role === 'admin'
             ? 'Sei collegato come amministratore. Il pannello di gestione arriva con la Fase 3.'
-            : 'Sei collegato come cliente. Carrello e pagamento arrivano con la Fase 1: per ora prenota dalla scheda Scopri.'}
+            : 'Sei collegato come cliente. Scegli le sorprese da Scopri o dai Negozi e pagale dal Carrello.'}
         </Text>
         <Button title="Esci" variant="secondary" onPress={logout} />
       </Panel>

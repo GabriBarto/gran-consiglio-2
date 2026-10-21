@@ -34,8 +34,23 @@ const store = {
   get codes() { try { return JSON.parse(localStorage.getItem('vs-codes') || '[]'); } catch { return []; } },
   addCode(c) { localStorage.setItem('vs-codes', JSON.stringify([c, ...this.codes])); },
   get session() { try { return JSON.parse(sessionStorage.getItem('vs-session')); } catch { return null; } },
+  get next() { return sessionStorage.getItem('vs-next'); },
+  set next(v) { v ? sessionStorage.setItem('vs-next', v) : sessionStorage.removeItem('vs-next'); },
+  get pos() { try { return JSON.parse(sessionStorage.getItem('vs-pos')); } catch { return null; } },
+  set pos(v) { v ? sessionStorage.setItem('vs-pos', JSON.stringify(v)) : sessionStorage.removeItem('vs-pos'); },
   set session(v) { v ? sessionStorage.setItem('vs-session', JSON.stringify(v)) : sessionStorage.removeItem('vs-session'); },
 };
+
+const posQuery = () => (store.pos ? `lat=${store.pos.lat}&lng=${store.pos.lng}` : '');
+const km = (d) => (d == null ? '' : ` · 📏 ${d.toLocaleString('it-IT')} km`);
+const isCustomer = () => store.session?.user?.role === 'cliente';
+
+/** Porta alla registrazione ricordando dove tornare dopo l'accesso. */
+function requireLogin(back) {
+  store.next = back;
+  toast('Registrati o accedi per acquistare: poi torni qui');
+  location.hash = '#/account';
+}
 
 // ---------- Scopri ----------
 async function home() {
@@ -53,21 +68,29 @@ async function home() {
     <div class="filters">
       <input id="q" type="search" placeholder="Cerca: lavanda, orchidea, bouquet…">
       <select id="city"><option value="">Tutte le città</option>${filters.cities.map((c) => `<option>${esc(c)}</option>`).join('')}</select>
+      <button class="secondary" id="near">📍 Vicino a me</button>
       <select id="cat"><option value="">Tutte le categorie</option>${filters.categories.map((c) => `<option value="${esc(c)}">${esc(CAT[c] || c)}</option>`).join('')}</select>
     </div>
     <div id="offers" class="grid"></div>
     <section class="how">
       <div><b>🔎</b><h3>1. Scopri</h3>Trova le sorprese verdi vicino a te.</div>
-      <div><b>🛒</b><h3>2. Prenota</h3>Paghi poco, ricevi un codice di ritiro.</div>
+      <div><b>🛒</b><h3>2. Acquista</h3>Paghi online e ricevi un codice di ritiro.</div>
       <div><b>🌿</b><h3>3. Ritira</h3>Passa in negozio nella fascia oraria indicata.</div>
     </section>`;
   const load = async () => {
     const p = new URLSearchParams({ q: $('#q').value, city: $('#city').value, category: $('#cat').value });
-    const offers = await api(`/api/offers?${p}`);
+    const offers = await api(`/api/offers?${p}&${posQuery()}`);
     if (!$('#offers')) return;   // l'utente ha già cambiato pagina
     $('#offers').innerHTML = offers.length ? offers.map(card).join('')
       : '<div class="empty" style="grid-column:1/-1">Nessuna offerta al momento 🌧️<br>Riprova più tardi!</div>';
-    document.querySelectorAll('[data-reserve]').forEach((b) => (b.onclick = () => reserveModal(offers.find((o) => o.id == b.dataset.reserve), load)));
+  };
+  $('#near').textContent = store.pos ? '📍 Vicino a me ✓' : '📍 Vicino a me';
+  $('#near').onclick = () => {
+    if (store.pos) { store.pos = null; $('#near').textContent = '📍 Vicino a me'; return load(); }
+    if (!navigator.geolocation) return toast('Il browser non supporta la geolocalizzazione');
+    navigator.geolocation.getCurrentPosition(
+      (p) => { store.pos = { lat: p.coords.latitude, lng: p.coords.longitude }; $('#near').textContent = '📍 Vicino a me ✓'; load(); },
+      () => toast('Posizione non disponibile: controlla i permessi del browser'));
   };
   let t; $('#q').oninput = () => { clearTimeout(t); t = setTimeout(load, 200); };
   $('#city').onchange = $('#cat').onchange = load;
@@ -82,54 +105,152 @@ function card(o) {
       <div class="shop">${esc(o.shop_emoji)} ${esc(o.shop_name)} · ${esc(o.city)}</div>
       <h3>${esc(o.title)}</h3>
       <div class="desc">${esc(o.description)}</div>
-      <div class="meta">🕒 Ritiro ${day(o.pickup_start)} ${hhmm(o.pickup_start)}–${hhmm(o.pickup_end)} · 📍 ${esc(o.address)}</div>
+      <div class="meta">🕒 Ritiro ${day(o.pickup_start)} ${hhmm(o.pickup_start)}–${hhmm(o.pickup_end)} · 📍 ${esc(o.address)}${km(o.distance_km)}</div>
       <div class="price-row"><span class="price">${eur(o.price_cents)}</span><span class="old">${eur(o.original_price_cents)}</span></div>
-      <button data-reserve="${o.id}">Prenota (${o.available} disponibili)</button>
+      <a class="btn" href="#/offerta/${o.id}">Vedi e acquista (${o.available} disponibili)</a>
     </div></article>`;
 }
 
-function reserveModal(o, reload) {
-  modal(`<h2>${esc(o.emoji)} ${esc(o.title)}</h2>
-    <p class="shop">${esc(o.shop_name)} · ${esc(o.address)}, ${esc(o.city)}</p>
-    <p class="meta">Paghi in negozio al ritiro: ${eur(o.price_cents)} a sorpresa.</p>
-    <label>Nome</label><input id="r-name" autocomplete="name">
-    <label>Email</label><input id="r-email" type="email" autocomplete="email">
-    <label>Quantità</label><input id="r-qty" type="number" min="1" max="${Math.min(5, o.available)}" value="1">
-    <p class="err" id="r-err"></p>
-    <div style="display:flex;gap:.6rem"><button id="r-ok">Conferma prenotazione</button><button class="secondary" id="r-no">Annulla</button></div>`);
-  $('#r-no').onclick = closeModal;
-  $('#r-ok').onclick = async () => {
+async function offerPage(id) {
+  const o = await api(`/api/offers/${id}`);
+  const expired = new Date(o.pickup_end) <= new Date();
+  view.innerHTML = `<p><a href="#/">← Tutte le offerte</a></p>
+    <div class="panel"><h1>${esc(o.emoji)} ${esc(o.title)}</h1>
+      <p class="shop"><a href="#/negozio/${o.shop_id}">${esc(o.shop_emoji)} ${esc(o.shop_name)}</a> · ${esc(o.address)}, ${esc(o.city)}</p>
+      <p>${esc(o.description)}</p>
+      ${o.allergens.length ? `<p class="meta">⚠️ Allergeni: ${o.allergens.map(esc).join(', ')}</p>` : ''}
+      <p class="meta">🕒 Ritiro ${day(o.pickup_start)} ${hhmm(o.pickup_start)}–${hhmm(o.pickup_end)}</p>
+      <div class="price-row"><span class="price">${eur(o.price_cents)}</span><span class="old">${eur(o.original_price_cents)}</span></div>
+      <p class="meta">Paghi ${eur(o.price_cents)} invece di ${eur(o.original_price_cents)}: risparmi ${eur(o.original_price_cents - o.price_cents)}.</p>
+      ${expired || o.available < 1 ? '<p class="err">Non più disponibile.</p>' : `
+        <label>Quantità (disponibili: ${o.available})</label><input id="o-qty" type="number" min="1" max="${Math.min(5, o.available)}" value="1" style="max-width:6rem">
+        <p class="err" id="o-err"></p><button id="o-add">Aggiungi al carrello</button>`}
+    </div>`;
+  const add = $('#o-add');
+  if (!add) return;
+  add.onclick = async () => {
+    if (!isCustomer()) {
+      if (store.session) return ($('#o-err').textContent = 'Solo gli account cliente possono acquistare.');
+      return requireLogin(`#/offerta/${id}`);
+    }
     try {
-      const { code } = await api('/api/reservations', { method: 'POST', body: { offer_id: o.id, name: $('#r-name').value, email: $('#r-email').value, qty: $('#r-qty').value } });
-      store.addCode(code);
-      modal(`<h2>Prenotazione confermata 🎉</h2><p>Mostra questo codice in negozio:</p><p style="text-align:center"><span class="code">${esc(code)}</span></p>
-        <p class="meta">Lo trovi anche in “Le mie prenotazioni”.</p><button id="ok">Fantastico</button>`);
-      $('#ok').onclick = () => { closeModal(); reload(); };
-    } catch (e) { $('#r-err').textContent = e.message; }
+      const qty = Number($('#o-qty').value);
+      const cart = await api('/api/cart', { token: store.session.token });
+      const have = cart.items.find((i) => i.box_id === o.id)?.qty ?? 0;
+      await setCart(o.id, have + qty);
+      toast('Aggiunto al carrello 🛒'); location.hash = '#/carrello';
+    } catch (e) { $('#o-err').textContent = e.message; }
   };
 }
 
-// ---------- Prenotazioni ----------
-async function bookings() {
-  view.innerHTML = `<h1>Le mie prenotazioni</h1>
-    <div class="panel"><label style="margin-top:0">Hai un codice? Cercalo</label>
-      <div style="display:flex;gap:.6rem"><input id="c" placeholder="VS-XXXXXX" style="flex:1"><button id="go">Cerca</button></div><p class="err" id="e"></p></div>
-    <div id="list" class="grid"></div>`;
-  const render = async (codes) => {
-    const items = (await Promise.all(codes.map((c) => api(`/api/reservations/${c}`).catch(() => null)))).filter(Boolean);
-    $('#list').innerHTML = items.length ? items.map((r) => `<article class="card"><div class="body">
-      <span class="tag ${r.status === 'collected' ? 'done' : ''}">${r.status === 'collected' ? 'Ritirata' : 'Da ritirare'}</span>
-      <h3>${esc(r.emoji)} ${esc(r.title)} × ${r.qty}</h3>
-      <div class="shop">${esc(r.shop_name)} · ${esc(r.address)}, ${esc(r.city)}</div>
-      <div class="meta">🕒 ${day(r.pickup_start)} ${hhmm(r.pickup_start)}–${hhmm(r.pickup_end)}</div>
-      <div><span class="code">${esc(r.code)}</span></div></div></article>`).join('')
-      : '<div class="empty" style="grid-column:1/-1">Nessuna prenotazione ancora 🌱</div>';
+/** Imposta la quantità nel carrello; se è di un altro negozio chiede se sostituirlo. */
+async function setCart(boxId, qty) {
+  const send = (replace) => api('/api/cart/items', { method: 'POST', token: store.session.token, body: { box_id: boxId, qty, replace } });
+  try { return await send(false); }
+  catch (e) {
+    if (e.code !== 'other_shop') throw e;
+    if (!confirm('Il carrello contiene box di un altro negozio. Vuoi svuotarlo e iniziare un nuovo carrello?')) throw new Error('Carrello non modificato');
+    return send(true);
+  }
+}
+
+async function shopsPage() {
+  view.innerHTML = `<h1>Negozi</h1>
+    <div class="filters"><input id="s-q" type="search" placeholder="Cerca per nome o città…">
+      <select id="s-km"><option value="">Qualsiasi distanza</option><option value="5">Entro 5 km</option><option value="15">Entro 15 km</option><option value="30">Entro 30 km</option></select>
+      <button class="secondary" id="s-near">📍 Vicino a me${store.pos ? ' ✓' : ''}</button></div>
+    <div id="shops" class="grid"></div>`;
+  const load = async () => {
+    const p = new URLSearchParams({ q: $('#s-q').value });
+    if (store.pos && $('#s-km').value) p.set('max_km', $('#s-km').value);
+    const list = await api(`/api/shops?${p}&${posQuery()}`);
+    if (!$('#shops')) return;
+    $('#shops').innerHTML = list.length ? list.map((s) => `<article class="card"><div class="body">
+      <h3>${esc(s.emoji)} ${esc(s.name)}</h3><div class="shop">${esc(s.address)}, ${esc(s.city)}${km(s.distance_km)}</div>
+      <div class="desc">${esc(s.description)}</div>
+      <div class="meta">${s.open_boxes} sorprese disponibili</div>
+      <a class="btn" href="#/negozio/${s.id}">Vai al negozio</a></div></article>`).join('')
+      : '<div class="empty" style="grid-column:1/-1">Nessun negozio trovato 🌧️</div>';
   };
-  render(store.codes);
-  $('#go').onclick = async () => {
-    const c = $('#c').value.trim().toUpperCase();
-    try { await api(`/api/reservations/${c}`); $('#e').textContent = ''; render([c]); } catch (e) { $('#e').textContent = e.message; }
+  let t; $('#s-q').oninput = () => { clearTimeout(t); t = setTimeout(load, 200); };
+  $('#s-km').onchange = load;
+  $('#s-near').onclick = () => {
+    if (!navigator.geolocation) return toast('Il browser non supporta la geolocalizzazione');
+    navigator.geolocation.getCurrentPosition(
+      (p) => { store.pos = { lat: p.coords.latitude, lng: p.coords.longitude }; shopsPage(); },
+      () => toast('Posizione non disponibile: controlla i permessi del browser'));
   };
+  load();
+}
+
+async function shopPage(id) {
+  const s = await api(`/api/shops/${id}?${posQuery()}`);
+  const hours = (a, b) => (a && b ? `${a}–${b}` : 'non indicato');
+  view.innerHTML = `<p><a href="#/negozi">← Tutti i negozi</a></p>
+    <div class="panel"><h1>${esc(s.emoji)} ${esc(s.name)}</h1><p>${esc(s.description)}</p>
+      <p class="meta">📍 ${esc(s.address)}, ${esc(s.city)}${km(s.distance_km)}${s.phone ? ` · 📞 ${esc(s.phone)}` : ''}</p>
+      <p class="meta">🕘 Orari di apertura: ${hours(s.opening_time, s.closing_time)} · 🕒 Ritiro: ${hours(s.pickup_start, s.pickup_end)}</p></div>
+    <h2>Sorprese disponibili</h2>
+    <div class="grid">${s.boxes.length ? s.boxes.map(card).join('') : '<div class="empty" style="grid-column:1/-1">Nessuna sorpresa al momento 🌧️</div>'}</div>`;
+}
+
+async function cartPage() {
+  if (!isCustomer()) {
+    if (!store.session) return requireLogin('#/carrello');
+    view.innerHTML = '<h1>Carrello</h1><div class="empty">Solo gli account cliente hanno un carrello.</div>'; return;
+  }
+  const token = store.session.token;
+  const cart = await api('/api/cart', { token });
+  if (!cart.items.length) { view.innerHTML = '<h1>Carrello</h1><div class="empty">Il carrello è vuoto 🌱<br><a href="#/">Scopri le offerte</a></div>'; return; }
+  const allOk = cart.items.every((i) => i.ok);
+  view.innerHTML = `<h1>Carrello</h1><p class="shop">Ordine da <a href="#/negozio/${cart.shop.id}">${esc(cart.shop.name)}</a> · ${esc(cart.shop.address)}, ${esc(cart.shop.city)}</p>
+    <div class="panel"><table><tr><th>Box</th><th>Quantità</th><th>Prezzo</th><th></th></tr>
+      ${cart.items.map((i) => `<tr><td>${esc(i.emoji)} ${esc(i.title)}<br><span class="meta">Ritiro ${day(i.pickup_start)} ${hhmm(i.pickup_start)}–${hhmm(i.pickup_end)}</span>
+        ${i.ok ? '' : '<br><span class="err">Non più disponibile nella quantità scelta</span>'}</td>
+        <td><input type="number" min="1" max="${Math.max(1, Math.min(5, i.available))}" value="${i.qty}" data-qty="${i.box_id}" style="width:4.5rem"></td>
+        <td>${eur(i.qty * i.price_cents)}</td><td><button class="link" data-rm="${i.box_id}">Rimuovi</button></td></tr>`).join('')}</table>
+      <p><b>Totale: ${eur(cart.total_cents)}</b> <span class="meta">(risparmi ${eur(cart.savings_cents)})</span></p></div>
+    <div class="panel" style="max-width:460px"><h2>Pagamento</h2>
+      <p class="meta">Pagamento simulato: usa una carta di 16 cifre qualsiasi (es. 4242 4242 4242 4242).</p>
+      <label>Numero di carta</label><input id="c-num" inputmode="numeric" autocomplete="cc-number" value="4242 4242 4242 4242">
+      <label>Scadenza (MM/AA)</label><input id="c-exp" autocomplete="cc-exp" value="12/30" style="max-width:7rem">
+      <p class="err" id="c-err"></p><button id="c-pay" ${allOk ? '' : 'disabled'}>Paga ${eur(cart.total_cents)}</button></div>`;
+  document.querySelectorAll('[data-qty]').forEach((el) => (el.onchange = async () => {
+    try { await setCart(Number(el.dataset.qty), Number(el.value)); } catch (e) { toast(e.message); }
+    cartPage();
+  }));
+  document.querySelectorAll('[data-rm]').forEach((el) => (el.onclick = async () => { await setCart(Number(el.dataset.rm), 0); cartPage(); }));
+  $('#c-pay').onclick = async () => {
+    try {
+      const { code } = await api('/api/checkout', { method: 'POST', token, body: { card: { number: $('#c-num').value, expiry: $('#c-exp').value } } });
+      location.hash = `#/ordini/${code}`;
+    } catch (e) { $('#c-err').textContent = e.message; }
+  };
+}
+
+function orderCard(o) {
+  return `<article class="card"><div class="body">
+    <span class="tag ${o.status === 'collected' ? 'done' : ''}">${o.status === 'collected' ? 'Ritirato' : 'Pagato · da ritirare'}</span>
+    <h3>${o.items.map((i) => `${esc(i.emoji)} ${i.qty}× ${esc(i.title)}`).join('<br>')}</h3>
+    <div class="shop">${esc(o.shop_name)} · ${esc(o.address)}, ${esc(o.city)}</div>
+    ${o.items.map((i) => `<div class="meta">🕒 ${day(i.pickup_start)} ${hhmm(i.pickup_start)}–${hhmm(i.pickup_end)}</div>`).join('')}
+    <div class="meta">Totale ${eur(o.total_cents)}</div><div><span class="code">${esc(o.code)}</span></div></div></article>`;
+}
+
+async function ordersPage(code) {
+  if (!isCustomer()) {
+    if (!store.session) return requireLogin('#/ordini');
+    view.innerHTML = '<h1>I miei ordini</h1><div class="empty">Solo gli account cliente hanno ordini.</div>'; return;
+  }
+  const token = store.session.token;
+  if (code) {
+    const o = await api(`/api/orders/${code}`, { token });
+    view.innerHTML = `<h1>Ordine confermato 🎉</h1><p>Ti abbiamo inviato un'email di conferma con il riepilogo e le modalità di ritiro.
+      Mostra il codice in negozio nella fascia oraria indicata.</p><div class="grid">${orderCard(o)}</div><p><a href="#/ordini">Tutti i miei ordini</a></p>`;
+    return;
+  }
+  const list = await api('/api/orders', { token });
+  view.innerHTML = `<h1>I miei ordini</h1><div class="grid">${list.length ? list.map(orderCard).join('') : '<div class="empty" style="grid-column:1/-1">Nessun ordine ancora 🌱</div>'}</div>`;
 }
 
 // ---------- Account (accesso, registrazione, area venditori) ----------
@@ -151,8 +272,8 @@ async function account() {
   view.innerHTML = `<h1>Ciao ${esc(me.user.username)} 👋</h1>
     <div class="panel"><p>${me.user.role === 'admin'
       ? 'Sei collegato come <b>amministratore</b>. Il pannello di gestione (licenze e moderazione) arriva con la Fase 3.'
-      : 'Sei collegato come <b>cliente</b>. Gli acquisti con carrello e pagamento arrivano con la Fase 1: per ora puoi prenotare dalla pagina Scopri.'}</p>
-      <button class="secondary" id="logout">Esci</button></div>`;
+      : 'Sei collegato come <b>cliente</b>. Puoi scegliere le sorprese dalla pagina Scopri e pagarle dal carrello.'}</p>
+      <a class="btn" href="#/ordini">I miei ordini</a> <button class="secondary" id="logout">Esci</button></div>`;
   $('#logout').onclick = logout;
 }
 
@@ -179,6 +300,9 @@ function authView(mode = 'login') {
       const body = { email: $('#a-email').value, password: $('#a-pass').value };
       if (reg) Object.assign(body, { role: $('#a-role').value, username: $('#a-user').value, password_confirm: $('#a-pass2').value });
       store.session = await api(reg ? '/api/auth/register' : '/api/auth/login', { method: 'POST', body });
+      const next = store.next;
+      store.next = null;
+      if (next && store.session.user.role === 'cliente') { location.hash = next; return; }   // riporta alla box che stava guardando
       account();
     } catch (e) { $('#a-err').textContent = e.message; }
   };
@@ -255,11 +379,14 @@ async function dashboard(s) {
 }
 
 // ---------- router ----------
-const routes = { '': home, prenotazioni: bookings, account, venditori: account };
+const routes = {
+  '': home, negozi: shopsPage, negozio: shopPage, offerta: offerPage, carrello: cartPage, ordini: ordersPage,
+  prenotazioni: ordersPage, account, venditori: account,
+};
 async function router() {
-  const key = location.hash.replace(/^#\/?/, '');
-  document.querySelectorAll('nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === (key || 'home')));
-  try { await (routes[key] || home)(); } catch (e) { view.innerHTML = `<div class="empty">Qualcosa è andato storto: ${esc(e.message)}</div>`; }
+  const [key = '', arg] = location.hash.replace(/^#\/?/, '').split('/');
+  document.querySelectorAll('nav a').forEach((a) => a.classList.toggle('active', a.dataset.nav === ({ negozio: 'negozi', offerta: 'home' }[key] ?? (key || 'home'))));
+  try { await (routes[key] || home)(arg); } catch (e) { view.innerHTML = `<div class="empty">Qualcosa è andato storto: ${esc(e.message)}</div>`; }
   window.scrollTo(0, 0);
 }
 addEventListener('hashchange', router);

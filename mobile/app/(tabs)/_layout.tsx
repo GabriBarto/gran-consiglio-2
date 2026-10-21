@@ -11,7 +11,9 @@ export default function TabsLayout() {
       headerStyle: { backgroundColor: '#fff' }, headerTitleStyle: { color: colors.greenDark, fontWeight: '800' },
     }}>
       <Tabs.Screen name="index" options={{ title: 'Scopri', headerTitle: '🌱 VerdeSalva', tabBarIcon: icon('🔎') }} />
-      <Tabs.Screen name="prenotazioni" options={{ title: 'Prenotazioni', tabBarIcon: icon('🎟️') }} />
+      <Tabs.Screen name="negozi" options={{ title: 'Negozi', tabBarIcon: icon('🏪') }} />
+      <Tabs.Screen name="carrello" options={{ title: 'Carrello', tabBarIcon: icon('🛒') }} />
+      <Tabs.Screen name="prenotazioni" options={{ title: 'Ordini', headerTitle: 'I miei ordini', tabBarIcon: icon('🎟️') }} />
       <Tabs.Screen name="venditori" options={{ title: 'Account', headerTitle: 'Account', tabBarIcon: icon('👤') }} />
     </Tabs>
   );

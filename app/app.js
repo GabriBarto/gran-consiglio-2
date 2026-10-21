@@ -1,6 +1,7 @@
 import http from 'node:http';
 import './routes/public.js';
 import './routes/auth.js';
+import './routes/customer.js';
 import './routes/seller.js';
 import './routes/demo.js';
 import { CORS, HttpError, routes, send, serveStatic } from './lib/http.js';
@@ -18,6 +19,6 @@ export const server = http.createServer(async (req, res) => {
     serveStatic(res, url.pathname);
   } catch (e) {
     if (!(e instanceof HttpError)) console.error(e);
-    send(res, e.status || 500, { error: e.status ? e.message : 'Errore interno' });
+    send(res, e.status || 500, { error: e.status ? e.message : 'Errore interno', ...(e.code ? { code: e.code } : {}) });
   }
 });

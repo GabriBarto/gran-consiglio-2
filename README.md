@@ -37,7 +37,7 @@ Durante la presentazione il pulsante **“↺ Reset dati demo”** nel footer ri
 
 ## Percorso suggerito per la demo
 
-1. **Cliente** – Home: statistiche, filtri per città/categoria/ricerca → *Prenota* una sorpresa → compare il **codice di ritiro**.
+1. **Cliente** – Home: statistiche, filtri per città/categoria/ricerca e “Vicino a me” → apri una sorpresa → *Aggiungi al carrello* (se non sei registrato vieni portato alla registrazione e poi riportato alla box) → paga (carta simulata) → compare il **codice di ritiro** e parte l'email di conferma.
 2. **Venditore** – “Accedi · Venditori”, entra con un account demo → pubblica una nuova offerta, poi inserisci il codice del cliente in **Conferma ritiro**.
 3. Torna alla home: le statistiche (piante salvate, risparmio) sono aggiornate.
 
@@ -84,10 +84,13 @@ Dockerfile · docker-compose.yml · Makefile
 ```
 
 API principali: `POST /api/auth/register|login|logout|change-password`, `GET /api/auth/me`,
-`GET /api/offers`, `POST /api/reservations`, `GET /api/reservations/:codice`,
+`GET /api/offers`, `GET /api/shops`, `GET /api/shops/:id` (con `?lat=&lng=` ordinano per distanza),
+`GET|POST|DELETE /api/cart`, `POST /api/checkout`, `GET /api/orders[/:codice]`, `GET /api/reservations/:codice`,
 `GET /api/seller/dashboard`, `POST /api/seller/offers`, `POST /api/seller/redeem`.
 
 La variabile `SERVICE_FEE_CENTS` (default 100) è la tariffa fissa trattenuta per ogni box venduta; l'importo reale è ancora da stabilire.
 
-> Nota: è un prototipo. Restano da realizzare, come da [`ROADMAP.md`](ROADMAP.md), carrello e pagamento online,
-> email di conferma, registrazione completa del negozio con partita IVA, pannello admin e recensioni.
+Pagamento ed email sono simulati: la carta `4000 0000 0000 0002` viene rifiutata, qualsiasi altra carta di 16 cifre passa; le email sono salvate nella tabella `emails` (e nel log) finché non c'è un server SMTP.
+
+> Nota: è un prototipo. Restano da realizzare, come da [`ROADMAP.md`](ROADMAP.md), Stripe e SMTP veri,
+> registrazione completa del negozio con partita IVA, pannello admin e recensioni.
