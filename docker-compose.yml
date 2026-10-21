@@ -1,0 +1,16 @@
+services:
+  verdesalva:
+    build: .
+    image: verdesalva:latest
+    container_name: verdesalva
+    ports:
+      - "${APP_PORT:-8080}:3000"
+    environment:
+      DEMO_MODE: "${DEMO_MODE:-true}"        # mostra il pulsante "Reset dati demo"
+      RESET_DEMO: "${RESET_DEMO:-false}"     # true = ricrea i dati demo a ogni avvio
+    volumes:
+      - verdesalva-data:/data
+    restart: unless-stopped
+
+volumes:
+  verdesalva-data:
