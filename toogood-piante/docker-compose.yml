@@ -1,0 +1,155 @@
+name: toogood
+
+# Profili:
+#   (nessuno)  sviluppo e demo: php, nginx, queue, scheduler, mysql, mailpit, s3mock, stripe-mock, wiremock
+#   test       aggiunge mysql-test (database in memoria) per i test automatici
+#   tools      aggiunge adminer (interfaccia web per il database)
+#   stripe     aggiunge stripe-cli (inoltra i webhook della modalità test Stripe; servono le chiavi)
+
+x-php: &php
+  build:
+    context: ./docker/php
+  image: toogood-php
+  working_dir: /var/www/html
+  volumes:
+    - ./apps/api:/var/www/html
+  env_file:
+    - ./apps/api/.env
+  depends_on:
+    mysql:
+      condition: service_healthy
+
+services:
+  php:
+    <<: *php
+    command: php-fpm -R
+
+  # Esegue i test con database e servizi isolati. Le variabili qui sotto hanno la precedenza su .env.
+  # Uso: docker compose --profile test run --rm php-test php artisan test
+  php-test:
+    <<: *php
+    profiles: ["test"]
+    depends_on:
+      mysql-test:
+        condition: service_healthy
+    environment:
+      APP_ENV: testing
+      DB_HOST: mysql-test
+      DB_DATABASE: toogood_test
+      CACHE_STORE: array
+      MAIL_MAILER: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      CLOCK_MODE: real
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./apps/api:/var/www/html:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php
+
+  queue:
+    <<: *php
+    command: php artisan queue:work --tries=3 --sleep=1
+    restart: unless-stopped
+
+  scheduler:
+    <<: *php
+    command: php artisan schedule:work
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.4
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+00:00
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: toogood
+      MYSQL_USER: toogood
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mysql-test:
+    profiles: ["test"]
+    image: mysql:8.4
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-time-zone=+00:00
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: toogood_test
+      MYSQL_USER: toogood
+      MYSQL_PASSWORD: secret
+    ports:
+      - "3308:3306"
+    tmpfs:
+      - /var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "8025:8025"   # interfaccia web e API
+      - "1025:1025"   # SMTP
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+  # Server S3 di prova (i file vivono in memoria e spariscono al riavvio).
+  # MinIO non è più scaricabile dai registri pubblici, quindi si usa S3Mock di Adobe.
+  s3mock:
+    image: adobe/s3mock:latest
+    environment:
+      COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS: toogood
+      initialBuckets: toogood
+    ports:
+      - "9090:9090"
+
+  stripe-mock:
+    image: stripe/stripe-mock:latest
+    ports:
+      - "12111:12111"
+
+  wiremock:
+    image: wiremock/wiremock:latest
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./docker/wiremock:/home/wiremock:ro
+
+  adminer:
+    profiles: ["tools"]
+    image: adminer:latest
+    ports:
+      - "8081:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: mysql
+
+  stripe-cli:
+    profiles: ["stripe"]
+    image: stripe/stripe-cli:latest
+    command: listen --api-key ${STRIPE_API_KEY:-} --forward-to http://nginx/api/webhooks/stripe
+    depends_on:
+      - nginx
+
+volumes:
+  mysql-data:
