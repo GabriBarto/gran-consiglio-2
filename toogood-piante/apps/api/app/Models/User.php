@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 // role e status non sono assegnabili in massa: si impostano esplicitamente nel codice.
 #[Fillable(['username', 'email', 'password'])]
@@ -27,7 +28,7 @@ class User extends Authenticatable
     public const STATUS_DELETED = 'DELETED';
 
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;
 
     /**
      * @return array<string, string>

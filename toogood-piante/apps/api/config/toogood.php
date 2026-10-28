@@ -13,6 +13,12 @@ return [
         'mode' => env('CLOCK_MODE', 'real'),
     ],
 
+    // Credenziali iniziali dell'admin (solo per il seeder: al primo accesso va cambiata la password)
+    'admin' => [
+        'email' => env('ADMIN_EMAIL'),
+        'initial_password' => env('ADMIN_INITIAL_PASSWORD'),
+    ],
+
     'stripe' => [
         'secret' => env('STRIPE_SECRET', 'sk_test_mock'),
         // In sviluppo e nei test punta a stripe-mock; vuoto = API reali di Stripe (modalità test)

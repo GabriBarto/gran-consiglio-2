@@ -28,12 +28,15 @@ return new class extends Migration
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
+            $table->unsignedTinyInteger('attempts')->default(0);
             $table->timestamp('created_at')->nullable();
         });
 
         // Codici monouso della 2FA via email
         Schema::create('login_challenges', function (Blueprint $table) {
             $table->id();
+            // Identificativo pubblico, indovinarlo non serve senza il codice
+            $table->uuid('public_id')->unique();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->string('code_hash');
             $table->timestamp('expires_at')->index();
@@ -49,6 +52,8 @@ return new class extends Migration
             $table->string('device', 120)->nullable();
             $table->timestamp('expires_at')->index();
             $table->timestamp('revoked_at')->nullable();
+            // Valorizzato solo quando il token è stato sostituito da un refresh: riusarlo indica un furto
+            $table->timestamp('rotated_at')->nullable();
             $table->timestamps();
         });
     }

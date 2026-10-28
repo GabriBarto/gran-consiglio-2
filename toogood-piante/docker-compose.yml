@@ -22,6 +22,7 @@ x-php: &php
 services:
   php:
     <<: *php
+    command: php-fpm -R
 
   # Esegue i test con database e servizi isolati. Le variabili qui sotto hanno la precedenza su .env.
   # Uso: docker compose --profile test run --rm php-test php artisan test
