@@ -1,0 +1,48 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/geocode",
+        "queryParameters": { "address": { "matches": ".*Milano\\s*$" } }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "found": true, "lat": 45.4642, "lng": 9.19, "city": "Milano" }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/geocode",
+        "queryParameters": { "address": { "matches": ".*Roma\\s*$" } }
+      },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "found": true, "lat": 41.9028, "lng": 12.4964, "city": "Roma" }
+      }
+    },
+    {
+      "priority": 1,
+      "request": {
+        "method": "GET",
+        "urlPath": "/geocode",
+        "queryParameters": { "address": { "contains": "TIMEOUT" } }
+      },
+      "response": { "status": 200, "fixedDelayMilliseconds": 15000, "jsonBody": { "found": false } }
+    },
+    {
+      "priority": 10,
+      "request": { "method": "GET", "urlPath": "/geocode" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "found": false }
+      }
+    }
+  ]
+}

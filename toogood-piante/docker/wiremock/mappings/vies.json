@@ -1,0 +1,27 @@
+{
+  "mappings": [
+    {
+      "priority": 1,
+      "request": { "method": "GET", "urlPath": "/vies/check/IT12345678901" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "valid": true, "name": "Vivaio Rossi S.r.l.", "address": "Via Roma 1, Milano" }
+      }
+    },
+    {
+      "priority": 1,
+      "request": { "method": "GET", "urlPath": "/vies/check/IT99999999999" },
+      "response": { "status": 503, "jsonBody": { "error": "servizio non disponibile" } }
+    },
+    {
+      "priority": 10,
+      "request": { "method": "GET", "urlPathPattern": "/vies/check/.*" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "valid": false }
+      }
+    }
+  ]
+}
