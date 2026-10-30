@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-10-28 – **giorno 2 completato**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-10-28 – **giorno 3 scritto (da provare sul telefono)**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -15,6 +15,14 @@ Ultimo aggiornamento: 2026-10-28 – **giorno 2 completato**. Calendario: [../MV
 - Blocco degli account sospesi, limiti di richieste (429) su accesso, codici, registrazione e recupero.
 - **Test: 61 su 61 passano.** In più, prova end-to-end sullo stack vivo con le email reali lette da Mailpit: registrazione → conferma → login → codice → `/me` → refresh → logout → admin.
 
+**Giorno 3 – app mobile** (`apps/mobile`, Expo SDK 58, JavaScript, React Navigation):
+- Schermate: accesso (email+password), codice 2FA, registrazione cliente/venditore, controlla la posta (con reinvio), password dimenticata e reset, cambio password obbligatorio (admin).
+- Sessione: refresh token nel deposito sicuro (`expo-secure-store`), access token in memoria, rinnovo automatico su 401 con una sola richiesta alla volta.
+- Navigazione per ruolo (CUSTOMER / SELLER / ADMIN): per ora schermate segnaposto con "Esci".
+- Messaggi di errore in italiano (`src/errors.js`). L'indirizzo dell'API è ricavato dall'IP del PC che serve Expo; si può forzare con `EXPO_PUBLIC_API_URL`.
+- Verificato: il bundle Android compila e `expo-doctor` è 20/20. **Non ancora provato contro l'API viva né su un telefono.**
+- Avvio: `cd apps/mobile && npm install && npx expo start`.
+
 ## Scelte da sapere
 - La registrazione del venditore crea solo l'**account**; i dati dell'attività, il documento e Stripe arrivano al giorno 4.
 - La 2FA è richiesta a **ogni accesso** (più semplice e più sicuro del "nuovo dispositivo" del piano).
@@ -23,7 +31,10 @@ Ultimo aggiornamento: 2026-10-28 – **giorno 2 completato**. Calendario: [../MV
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Dopo un riavvio del servizio `php`, riavviare anche `nginx` (altrimenti 502).
 
-## Prossimo: giorno 3 – app mobile
+## Prossimo: provare il giorno 3, poi giorno 4 – onboarding venditore
+Prova sul telefono (Expo Go): registrazione → link nella posta (Mailpit) → accesso con codice → logout. Per il telefono vero, `APP_URL` in `apps/api/.env` deve usare l'IP del PC.
+
+### (vecchio promemoria del giorno 3)
 Struttura Expo (React Native, JavaScript), navigazione per ruolo, schermate di registrazione, accesso con codice e recupero password collegate a queste API. Servono: Node 24 (già presente) e un telefono con Expo Go o un emulatore; per un telefono vero `APP_URL` e l'indirizzo dell'API devono usare l'IP del PC nella rete locale.
 
 ## Come riprendere

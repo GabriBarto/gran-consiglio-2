@@ -9,7 +9,7 @@ Stato: **Fase 0** (infrastruttura). Il codice applicativo parte dalla Fase 1.
 
 ```
 apps/api         Laravel (PHP 8.4): API, code, scheduler
-apps/mobile      app React Native / Expo (non ancora creata)
+apps/mobile      app React Native / Expo (JavaScript)
 apps/admin       pannello admin React/Vite (non ancora creato)
 contracts/       specifica OpenAPI e casi di test condivisi (non ancora creata)
 docker/          Dockerfile, nginx, risposte dei simulatori
