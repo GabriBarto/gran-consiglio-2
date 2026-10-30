@@ -3,13 +3,13 @@
 App in stile "Too Good To Go" per box a sorpresa di piante. Prototipo per un progetto di studio.
 Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoTecnico.md`.
 
-Stato: **Fase 0** (infrastruttura). Il codice applicativo parte dalla Fase 1.
+Stato: giorno 3 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso). Dettagli e come riprendere in [STATO.md](STATO.md).
 
 ## Struttura
 
 ```
 apps/api         Laravel (PHP 8.4): API, code, scheduler
-apps/mobile      app React Native / Expo (non ancora creata)
+apps/mobile      app React Native / Expo (JavaScript)
 apps/admin       pannello admin React/Vite (non ancora creato)
 contracts/       specifica OpenAPI e casi di test condivisi (non ancora creata)
 docker/          Dockerfile, nginx, risposte dei simulatori
@@ -31,6 +31,16 @@ docker compose exec php php artisan toogood:check-services
 
 Se `apps/api/.env` non esiste: copia `apps/api/.env.example` in `apps/api/.env` e poi esegui
 `docker compose exec php php artisan key:generate`.
+
+## App mobile
+
+```bash
+cd apps/mobile
+npm install
+npx expo start
+```
+
+Si apre con Expo Go sul telefono (stessa rete del PC) o con un emulatore. L'indirizzo dell'API è ricavato dall'IP del PC; si può forzare con `EXPO_PUBLIC_API_URL`. Per provare il flusso completo: registrazione → link di conferma in Mailpit → accesso → codice a 6 cifre in Mailpit. L'admin del seeder è `admin@toogood.test` (password iniziale in `apps/api/.env.example`).
 
 ## Servizi in locale
 
