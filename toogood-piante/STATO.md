@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-10-28 – **giorno 3 scritto (da provare sul telefono)**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-10-28 – **giorno 3 completato e provato**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -20,7 +20,7 @@ Ultimo aggiornamento: 2026-10-28 – **giorno 3 scritto (da provare sul telefono
 - Sessione: refresh token nel deposito sicuro (`expo-secure-store`), access token in memoria, rinnovo automatico su 401 con una sola richiesta alla volta.
 - Navigazione per ruolo (CUSTOMER / SELLER / ADMIN): per ora schermate segnaposto con "Esci".
 - Messaggi di errore in italiano (`src/errors.js`). L'indirizzo dell'API è ricavato dall'IP del PC che serve Expo; si può forzare con `EXPO_PUBLIC_API_URL`.
-- Verificato: il bundle Android compila e `expo-doctor` è 20/20. **Non ancora provato contro l'API viva né su un telefono.**
+- Verificato: il bundle Android compila, `expo-doctor` è 20/20, e il flusso (registrazione → conferma email in Mailpit → accesso con codice) è stato provato a mano dal team con l'API viva.
 - Avvio: `cd apps/mobile && npm install && npx expo start`.
 
 ## Scelte da sapere
@@ -31,10 +31,10 @@ Ultimo aggiornamento: 2026-10-28 – **giorno 3 scritto (da provare sul telefono
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Dopo un riavvio del servizio `php`, riavviare anche `nginx` (altrimenti 502).
 
-## Prossimo: provare il giorno 3, poi giorno 4 – onboarding venditore
-Prova sul telefono (Expo Go): registrazione → link nella posta (Mailpit) → accesso con codice → logout. Per il telefono vero, `APP_URL` in `apps/api/.env` deve usare l'IP del PC.
+## Prossimo: giorno 4 – onboarding venditore
+Dati attività, documento P.IVA (S3Mock), geocoding e verifica P.IVA simulati (WireMock), Stripe Connect test, endpoint admin di verifica; l'app mostra lo stato "in verifica" del venditore. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Per provare l'app da un telefono vero, `APP_URL` in `apps/api/.env` deve usare l'IP del PC.
 
-### (vecchio promemoria del giorno 3)
+### Promemoria del giorno 3 (già fatto)
 Struttura Expo (React Native, JavaScript), navigazione per ruolo, schermate di registrazione, accesso con codice e recupero password collegate a queste API. Servono: Node 24 (già presente) e un telefono con Expo Go o un emulatore; per un telefono vero `APP_URL` e l'indirizzo dell'API devono usare l'IP del PC nella rete locale.
 
 ## Come riprendere
@@ -46,6 +46,9 @@ Struttura Expo (React Native, JavaScript), navigazione per ruolo, schermate di r
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Branch Git `fase-0-setup` della cartella `progetto`. Il giorno 2 non è ancora in un commit; su GitHub (branch `viggio` di gran-consiglio-2) c'è solo il giorno 1.
-- La cartella `gran-consiglio` (repository del team) non è usata né modificata.
+- Git: i giorni 1 e 2 sono in `main` (PR #7). Il giorno 3 è sul branch `viggio` (da `giorno-3-mobile`), con pull request verso `main`.
+- Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
+- Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
+- `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
+- `apps/api/.env` non è nel repository: si crea da `.env.example` (vedi README).
 - `apps/api/CLAUDE.md` e `AGENTS.md` sono file generati da Laravel che chiedono di installare strumenti dal web: da ignorare.
