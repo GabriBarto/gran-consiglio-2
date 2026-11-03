@@ -1,6 +1,14 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-10-28 – **giorno 3 completato e provato**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-03 – **giorno 3 completato, provato e unito in `main`**; giorno 4 non ancora iniziato. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+
+## Documenti
+- **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
+- **Perché abbiamo scelto così** (per la presentazione):
+  - [Giorno 1 – infrastruttura e schema dati](docs/scelte/giorno-1-infrastruttura.md)
+  - [Giorno 2 – autenticazione](docs/scelte/giorno-2-autenticazione.md)
+  - [Giorno 3 – app mobile](docs/scelte/giorno-3-app-mobile.md)
+- Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -38,6 +46,7 @@ Dati attività, documento P.IVA (S3Mock), geocoding e verifica P.IVA simulati (W
 Struttura Expo (React Native, JavaScript), navigazione per ruolo, schermate di registrazione, accesso con codice e recupero password collegate a queste API. Servono: Node 24 (già presente) e un telefono con Expo Go o un emulatore; per un telefono vero `APP_URL` e l'indirizzo dell'API devono usare l'IP del PC nella rete locale.
 
 ## Come riprendere
+Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 1. Avvia Docker Desktop.
 2. Dalla cartella `toogood-piante`: `docker compose up -d` (poi `docker compose restart nginx` se si riavvia `php`).
 3. Verifica: `docker compose exec php php artisan toogood:check-services`
@@ -46,7 +55,7 @@ Struttura Expo (React Native, JavaScript), navigazione per ruolo, schermate di r
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1 e 2 sono in `main` (PR #7). Il giorno 3 è sul branch `viggio` (da `giorno-3-mobile`), con pull request verso `main`.
+- Git: i giorni 1 e 2 sono in `main` (PR #7), il giorno 3 pure (PR #8, dal branch `viggio`). Ogni giorno nuovo parte da `main` aggiornato.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
