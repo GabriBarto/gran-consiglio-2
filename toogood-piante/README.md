@@ -3,7 +3,7 @@
 App in stile "Too Good To Go" per box a sorpresa di piante. Prototipo per un progetto di studio.
 Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoTecnico.md`.
 
-Stato: giorno 3 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso). Dettagli e come riprendere in [STATO.md](STATO.md).
+Stato: giorno 3 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
 
 ## Struttura
 
