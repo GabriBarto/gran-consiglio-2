@@ -3,7 +3,7 @@
 App in stile "Too Good To Go" per box a sorpresa di piante. Prototipo per un progetto di studio.
 Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoTecnico.md`.
 
-Stato: giorno 3 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
+Stato: giorno 4 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
 
 ## Struttura
 
@@ -40,7 +40,7 @@ npm install
 npx expo start
 ```
 
-Si apre con Expo Go sul telefono (stessa rete del PC) o con un emulatore. L'indirizzo dell'API è ricavato dall'IP del PC; si può forzare con `EXPO_PUBLIC_API_URL`. Per provare il flusso completo: registrazione → link di conferma in Mailpit → accesso → codice a 6 cifre in Mailpit. L'admin del seeder è `admin@toogood.test` (password iniziale in `apps/api/.env.example`).
+Si apre con Expo Go sul telefono (stessa rete del PC) o con un emulatore. L'indirizzo dell'API è ricavato dall'IP del PC; si può forzare con `EXPO_PUBLIC_API_URL`. Per provare il flusso completo: registrazione → link di conferma in Mailpit → accesso → codice a 6 cifre in Mailpit. Da venditore, dopo l'accesso si inseriscono i dati dell'attività (indirizzo che finisce con "Milano" o "Roma", P.IVA `IT12345678901`), si allega un documento e si collega il conto di pagamento. L'admin del seeder è `admin@toogood.test` (password iniziale in `apps/api/.env.example`).
 
 ## Servizi in locale
 

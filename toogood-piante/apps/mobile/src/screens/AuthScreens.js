@@ -2,27 +2,8 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
-import { errorMessage } from '../errors';
+import { useAction } from '../useAction';
 import { Button, colors, ErrorText, Field, Hint, LinkText, Screen, Title } from '../ui';
-
-// Esegue un'azione asincrona mostrando "in corso" ed eventuale errore tradotto.
-function useAction() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const run = async (fn) => {
-    setLoading(true);
-    setError('');
-    try {
-      await fn();
-    } catch (e) {
-      setError(errorMessage(e));
-      return e;
-    } finally {
-      setLoading(false);
-    }
-  };
-  return { loading, error, setError, run };
-}
 
 export function LoginScreen({ navigation }) {
   const { startLogin } = useAuth();
