@@ -1,3 +1,4 @@
+import { File } from 'expo-file-system';
 import { API_URL } from './config';
 
 export class ApiError extends Error {
@@ -14,18 +15,22 @@ let session = { getAccessToken: () => null, refresh: async () => false };
 export const bindSession = (s) => { session = s; };
 
 async function send(method, path, body, token) {
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
   let res;
   try {
     res = await fetch(`${API_URL}${path}`, {
       method,
       headers: {
         Accept: 'application/json',
-        'Content-Type': 'application/json',
+        // Per i file (FormData) il Content-Type lo imposta fetch, con il separatore giusto
+        ...(isForm ? {} : { 'Content-Type': 'application/json' }),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });
-  } catch {
+  } catch (err) {
+    // In sviluppo il motivo vero compare nel terminale di Expo
+    if (__DEV__) console.warn(`Richiesta fallita: ${method} ${path} –`, err?.message ?? err);
     throw new ApiError(0, 'NETWORK_ERROR', 'Network error');
   }
   if (res.status === 204) return null;
@@ -63,4 +68,20 @@ export const api = {
   me: () => request('GET', '/me'),
   logout: (refresh_token) => request('POST', '/auth/logout', { refresh_token }),
   changePassword: (data) => request('POST', '/auth/password/change', data),
+
+  // Onboarding del venditore
+  sellerStatus: () => request('GET', '/seller'),
+  saveSellerProfile: (data) => request('PUT', '/seller/profile', data),
+  // file: { uri, name, mimeType } scelto con il selettore di documenti.
+  // Il fetch di Expo SDK 58 non accetta più la forma { uri, name, type }: vuole una parte con i byte del file.
+  uploadSellerDocument: (file) => {
+    const local = new File(file.uri);
+    const form = new FormData();
+    form.append('file', { name: file.name, type: file.mimeType ?? 'application/octet-stream', bytes: () => local.bytes() });
+    return request('POST', '/seller/documents', form);
+  },
+  deleteSellerDocument: (id) => request('DELETE', `/seller/documents/${id}`),
+  resubmitSeller: () => request('POST', '/seller/resubmit'),
+  stripeOnboardingUrl: () => request('POST', '/seller/stripe/onboarding'),
+  stripeSync: () => request('POST', '/seller/stripe/sync'),
 };

@@ -13,6 +13,16 @@ const BY_CODE = {
   INVALID_CURRENT_PASSWORD: 'La password attuale non è corretta.',
   NETWORK_ERROR: 'Impossibile contattare il server. Controlla la connessione.',
   RATE_LIMITED: 'Troppe richieste: riprova tra un minuto.',
+  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Controlla via, numero e città (es. “Via Roma 1, Milano”).',
+  GEOCODING_UNAVAILABLE: 'Non riusciamo a verificare l’indirizzo in questo momento. Riprova tra poco.',
+  VAT_INVALID: 'La partita IVA non risulta valida.',
+  PROFILE_LOCKED: 'I dati di un’attività approvata non si modificano da qui.',
+  PROFILE_REQUIRED: 'Compila prima i dati dell’attività.',
+  NO_DOCUMENTS: 'Allega almeno un documento dell’attività.',
+  TOO_MANY_DOCUMENTS: 'Puoi allegare al massimo 5 documenti.',
+  STRIPE_UNAVAILABLE: 'Il servizio di pagamento non risponde. Riprova tra poco.',
+  INVALID_STATE: 'Questa operazione non è disponibile nello stato attuale.',
+  FORBIDDEN_ROLE: 'Non hai i permessi per questa operazione.',
 };
 
 const BY_FIELD = {
@@ -23,6 +33,15 @@ const BY_FIELD = {
   accept_terms: 'Devi accettare i termini per continuare.',
   code: 'Inserisci il codice di 6 cifre.',
   current_password: 'La password attuale non è corretta.',
+  business_name: 'Inserisci la ragione sociale.',
+  vat_number: 'Partita IVA non valida (11 cifre) o già registrata.',
+  phone: 'Inserisci un numero di telefono valido.',
+  address: 'Inserisci l’indirizzo dell’attività.',
+  opens_at: 'Controlla l’orario di apertura (formato 08:30).',
+  closes_at: 'La chiusura deve essere dopo l’apertura (formato 19:00).',
+  pickup_from: 'Il ritiro deve iniziare dopo l’apertura (formato 17:00).',
+  pickup_to: 'Il ritiro deve finire dopo il suo inizio e non oltre la chiusura.',
+  file: 'Il file deve essere PDF, JPG o PNG, fino a 5 MB.',
 };
 
 export function errorMessage(err) {

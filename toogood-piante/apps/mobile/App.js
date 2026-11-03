@@ -7,7 +7,8 @@ import { AuthProvider, useAuth } from './src/AuthContext';
 import {
   CheckEmailScreen, ForgotPasswordScreen, LoginCodeScreen, LoginScreen, RegisterScreen, ResetPasswordScreen,
 } from './src/screens/AuthScreens';
-import { AdminHome, ChangePasswordScreen, CustomerHome, SellerHome } from './src/screens/HomeScreens';
+import { AdminHome, ChangePasswordScreen, CustomerHome } from './src/screens/HomeScreens';
+import { SellerHome, SellerProfileScreen } from './src/screens/SellerScreens';
 import { colors } from './src/ui';
 
 const Stack = createNativeStackNavigator();
@@ -39,7 +40,12 @@ function Routes() {
       ) : user.must_change_password ? (
         <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={{ headerShown: false }} />
       ) : (
-        <Stack.Screen name="Home" component={HOME_BY_ROLE[user.role] ?? CustomerHome} options={{ headerShown: false }} />
+        <>
+          <Stack.Screen name="Home" component={HOME_BY_ROLE[user.role] ?? CustomerHome} options={{ headerShown: false }} />
+          {user.role === 'SELLER' ? (
+            <Stack.Screen name="SellerProfile" component={SellerProfileScreen} options={{ title: '' }} />
+          ) : null}
+        </>
       )}
     </Stack.Navigator>
   );

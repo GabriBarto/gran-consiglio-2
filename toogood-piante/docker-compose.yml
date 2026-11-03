@@ -13,6 +13,7 @@ x-php: &php
   working_dir: /var/www/html
   volumes:
     - ./apps/api:/var/www/html
+    - ./docker/php/uploads.ini:/usr/local/etc/php/conf.d/uploads.ini:ro
   env_file:
     - ./apps/api/.env
   depends_on:

@@ -67,7 +67,13 @@ Scelte puntuali, tutte spiegate da commenti nelle migrazioni:
 
 Test di schema: [SchemaTest.php](../../apps/api/tests/Feature/SchemaTest.php).
 
-## 7. Compromesso dichiarato: PHP-FPM come root (solo sviluppo)
+## 7. nginx risolve `php` a ogni richiesta (aggiunta del giorno 4)
+
+- **Cosa:** in [default.conf](../../docker/nginx/default.conf) l'indirizzo di `php` è dichiarato con `resolver 127.0.0.11` e una variabile (`set $php_upstream php:9000`).
+- **Perché:** nginx risolve di solito i nomi una volta sola, all'avvio. Quando il container `php` si riavvia cambia indirizzo e nginx continuava a puntare al vecchio: l'API rispondeva **502** e il login smetteva di funzionare finché non si riavviava anche nginx. È successo davvero durante le prove. Con la risoluzione a ogni richiesta (cache di 5 secondi) il riavvio di `php` non rompe più nulla; l'ho verificato riavviando solo `php` e controllando che l'API rispondesse 200.
+- **Limiti di upload:** [docker/php/uploads.ini](../../docker/php/uploads.ini) porta il limite di PHP a 6 MB, perché la regola dei documenti dei venditori è 5 MB e PHP si fermava a 2 MB.
+
+## 8. Compromesso dichiarato: PHP-FPM come root (solo sviluppo)
 
 - **Cosa:** `php-fpm -R` e `user = root` nel Dockerfile.
 - **Perché:** sui dischi condivisi di Windows i permessi dei file non sono affidabili; con utenti diversi i file di log e cache creati da un processo non erano scrivibili dall'altro. Per non far perdere tempo al gruppo si è scelto di far girare tutto come root **solo in locale**.
