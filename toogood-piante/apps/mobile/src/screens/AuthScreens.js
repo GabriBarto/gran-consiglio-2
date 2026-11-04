@@ -130,7 +130,7 @@ export function CheckEmailScreen({ route, navigation }) {
       <ErrorText>{error}</ErrorText>
       {sent ? <Hint>Email inviata di nuovo.</Hint> : null}
       <Button title="Invia di nuovo la conferma" secondary loading={loading} onPress={() => run(async () => { await api.resendVerification(email); setSent(true); })} />
-      <Button title="Vai all’accesso" onPress={() => navigation.popToTop()} />
+      <Button title="Vai all’accesso" onPress={() => navigation.navigate('Login')} />
     </Screen>
   );
 }
@@ -164,7 +164,7 @@ export function ResetPasswordScreen({ route, navigation }) {
 
   const submit = () => run(async () => {
     await api.resetPassword({ email, code: code.trim(), password, password_confirmation: confirm });
-    navigation.popToTop();
+    navigation.navigate('Login');
   });
 
   return (

@@ -17,9 +17,6 @@ function RoleHome({ title, hint }) {
   );
 }
 
-export const CustomerHome = () => (
-  <RoleHome title="Box vicino a te" hint="Qui vedrai le box di piante in vendita (giorno 7)." />
-);
 export const AdminHome = () => (
   <RoleHome title="Amministrazione" hint="Il pannello admin è sul web; da qui si accede solo per verificare l’account." />
 );
