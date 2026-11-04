@@ -23,6 +23,14 @@ const BY_CODE = {
   STRIPE_UNAVAILABLE: 'Il servizio di pagamento non risponde. Riprova tra poco.',
   INVALID_STATE: 'Questa operazione non è disponibile nello stato attuale.',
   FORBIDDEN_ROLE: 'Non hai i permessi per questa operazione.',
+  SELLER_NOT_READY: 'Per gestire le box serve un’attività approvata e il conto di pagamento collegato.',
+  LOW_EARNING_CONFIRMATION_REQUIRED: 'Con questo prezzo il tuo guadagno è nullo o negativo: spunta la conferma per pubblicare.',
+  PRICE_LOCKED: 'Dopo la prima vendita valore e sconto non si possono più cambiare.',
+  QUANTITY_CANNOT_INCREASE: 'La quantità può solo diminuire.',
+  QUANTITY_BELOW_SOLD: 'Non puoi scendere sotto il numero di box già vendute.',
+  BOX_NOT_EDITABLE: 'Le box si modificano solo nel giorno di vendita.',
+  BOX_HAS_ORDERS: 'Ci sono ordini per questa box: non si può eliminare. Puoi ridurre la quantità a quanto già venduto.',
+  NOT_FOUND: 'Box non trovata: potrebbe essere già stata eliminata.',
 };
 
 const BY_FIELD = {
@@ -42,6 +50,12 @@ const BY_FIELD = {
   pickup_from: 'Il ritiro deve iniziare dopo l’apertura (formato 17:00).',
   pickup_to: 'Il ritiro deve finire dopo il suo inizio e non oltre la chiusura.',
   file: 'Il file deve essere PDF, JPG o PNG, fino a 5 MB.',
+  box_type_id: 'Scegli la tipologia della box.',
+  category_id: 'Scegli la categoria.',
+  description: 'Descrivi il contenuto (almeno 5 caratteri).',
+  list_value_cents: 'Inserisci il valore di listino (almeno 0,01 €).',
+  discount_pct: 'Lo sconto deve essere tra il 60% e il 70%.',
+  quantity: 'La quantità deve essere almeno 1.',
 };
 
 export function errorMessage(err) {

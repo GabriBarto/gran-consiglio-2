@@ -54,6 +54,45 @@ export const LinkText = ({ children, onPress }) => (
   </Pressable>
 );
 
+// Scelta tra più opzioni: una sola (multi=false) o più di una (multi=true).
+export function Chips({ label, options, value, onChange, multi = false, disabled = false }) {
+  const selected = multi ? value : [value];
+  const toggle = (key) => {
+    if (disabled) return;
+    if (!multi) return onChange(key);
+    onChange(selected.includes(key) ? selected.filter((k) => k !== key) : [...selected, key]);
+  };
+  return (
+    <View style={{ marginBottom: 14 }}>
+      {label ? <Text style={styles.label}>{label}</Text> : null}
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+        {options.map(({ key, label: text }) => {
+          const on = selected.includes(key);
+          return (
+            <Pressable
+              key={key}
+              onPress={() => toggle(key)}
+              style={{
+                paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1,
+                borderColor: on ? colors.green : colors.border, backgroundColor: on ? colors.green : '#fff',
+                opacity: disabled ? 0.6 : 1,
+              }}
+            >
+              <Text style={{ color: on ? '#fff' : colors.text, fontWeight: on ? '600' : '400' }}>{text}</Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </View>
+  );
+}
+
+export const Card = ({ children, style }) => (
+  <View style={[{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 16 }, style]}>
+    {children}
+  </View>
+);
+
 const styles = StyleSheet.create({
   screen: { padding: 24, paddingTop: 48, flexGrow: 1 },
   title: { fontSize: 26, fontWeight: '700', color: colors.text, marginBottom: 8 },

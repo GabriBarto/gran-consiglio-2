@@ -3,7 +3,7 @@
 App in stile "Too Good To Go" per box a sorpresa di piante. Prototipo per un progetto di studio.
 Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoTecnico.md`.
 
-Stato: giorno 5 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore, pannello admin web). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
+Stato: giorno 6 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore, pannello admin web, box). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
 
 ## Struttura
 
@@ -11,7 +11,7 @@ Stato: giorno 5 di 14 completato (infrastruttura, autenticazione API, app mobile
 apps/api         Laravel (PHP 8.4): API, code, scheduler
 apps/mobile      app React Native / Expo (JavaScript)
 apps/admin       pannello admin React/Vite (JavaScript): coda delle verifiche
-contracts/       specifica OpenAPI e casi di test condivisi (non ancora creata)
+contracts/       casi di test condivisi tra backend e app (formula del prezzo); la specifica OpenAPI non è ancora creata
 docker/          Dockerfile, nginx, risposte dei simulatori
 docker-compose.yml
 ```

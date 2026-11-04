@@ -6,6 +6,7 @@ import { api } from '../api';
 import { useAuth } from '../AuthContext';
 import { errorMessage } from '../errors';
 import { useAction } from '../useAction';
+import { TodayBoxes } from './BoxScreens';
 import { Button, colors, ErrorText, Field, Hint, LinkText, Screen, Title } from '../ui';
 
 const STATUS_TEXT = {
@@ -132,10 +133,7 @@ export function SellerHome({ navigation }) {
       ) : null}
 
       {info.can_publish ? (
-        <Card>
-          <Text style={{ color: colors.green, fontWeight: '700', marginBottom: 4 }}>Tutto pronto</Text>
-          <Hint>Puoi pubblicare box. La pubblicazione arriva nel prossimo aggiornamento.</Hint>
-        </Card>
+        <TodayBoxes navigation={navigation} />
       ) : info.status === 'APPROVED' ? (
         <Hint>Per pubblicare box ti manca solo di collegare il conto di pagamento.</Hint>
       ) : null}

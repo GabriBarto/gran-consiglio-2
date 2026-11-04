@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello admin web). Giorni 1–4 in `main`; il giorno 5 è sul branch `rebs` (pubblicato, senza PR). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 6 completato e provato sull'API; schermate delle box non ancora provate su telefono**. Giorni 1–5 in `main` (PR #7–#11); il giorno 6 è sul branch locale `giorno-6-box` (**non pubblicato**, nessun push). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -10,8 +10,10 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello
   - [Giorno 3 – app mobile](docs/scelte/giorno-3-app-mobile.md)
   - [Giorno 4 – onboarding venditore](docs/scelte/giorno-4-onboarding-venditore.md)
   - [Giorno 5 – pannello admin web](docs/scelte/giorno-5-pannello-admin.md)
+  - [Giorno 6 – box](docs/scelte/giorno-6-box.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
+- Endpoint delle box e formula del prezzo: [docs/API-box.md](docs/API-box.md)
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -58,6 +60,16 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello
 - **Codice solo la prima volta:** dopo un accesso con codice l'app riceve un `device_token`; ai login successivi (anche dopo l'uscita) basta la password. Nuova tabella `trusted_devices`: **eseguire `php artisan migrate`**. Nell'app mobile i token stanno in `expo-secure-store`, **uno per account** (cliente e venditore sullo stesso telefono: il codice serve la prima volta per ciascuno, poi mai più); il pannello admin web non lo usa.
 - Test: **109 su 109** (11 nuovi: dispositivi fidati e geocoder). Provato dal vivo: Pesaro, Corniglio e Catania trovate, un testo senza senso rifiutato; secondo login senza codice né email. Bundle Android ok. **Da provare sul telefono** il giro completo (registrazione → codice → esci → rientra con la sola password).
 
+**Giorno 6 – box** (endpoint e regole: [docs/API-box.md](docs/API-box.md)):
+- API: il venditore con attività approvata e conto collegato crea una box **per oggi** (tipologia, categoria, attributi, descrizione, valore di listino, sconto 60–70%, quantità), la vede, la modifica e la elimina. Prezzo, tariffa e guadagno li calcola il server in centesimi interi (formula: listino × (100 − sconto) / 100, tariffa 1,50 €); il guadagno può essere negativo.
+- Guadagno nullo o negativo: il server rifiuta (409) finché il venditore non conferma esplicitamente; nell'app il riepilogo diventa rosso con la casella "Ho capito, pubblica comunque".
+- Modifica: valore e sconto bloccati dopo la prima vendita; la quantità può solo scendere, mai sotto il venduto; eliminazione solo senza vendite. Ogni box conserva la tariffa del momento della creazione.
+- App: nella home del venditore la sezione **Box di oggi** (elenco con prezzo, disponibili e guadagno) e il modulo **Nuova box / Modifica box** con riepilogo del prezzo in tempo reale.
+- Nuovo: `contracts/price-cases.json` (11 casi della formula) eseguito da PHP e da `npm test` nell'app; `docker-compose.yml` monta `contracts/` nei container PHP (**dopo il pull rifare `docker compose up -d`**).
+- Test: **140 su 140** backend (31 nuovi) e 14 su 14 dell'app (`cd apps/mobile && npm test`). Provato dal vivo sull'API: opzioni, creazione, elenco. Bundle Android ok. **Le schermate non sono state provate su telefono.**
+- Limiti noti: il prezzo può arrivare a 0 con listini minuscoli (nessun minimo per RB-04) e Stripe non accetta meno di 0,50 €: da gestire nel pagamento (giorno 8). Lo stock "venduto" si simula soltanto: il decremento automatico arriva con il carrello. La pubblicazione non controlla se la fascia di ritiro di oggi è finita.
+- Nota sul geocoding reale: l'indirizzo `Via Garibaldi 12, Bologna` è stato risolto da OpenStreetMap in un comune della provincia (Sasso Marconi): usa il primo risultato e non confronta la città scritta con quella trovata. Da rifinire (ricerca strutturata o conferma della città) prima del giorno 7, quando la ricerca per distanza si baserà su queste coordinate.
+
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
 - Una P.IVA inesistente è rifiutata; se il servizio di verifica è giù il profilo si salva con controllo "non verificato" e decide l'admin.
@@ -69,8 +81,8 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 6 – box
-Creazione di box per oggi, prezzo calcolato dal sistema (sconto 60–70%, tariffa 1,50 €), guadagno mostrato anche se negativo, modifica, eliminazione e stock a contatore; il venditore pubblica una box dall'app (serve `can_publish`). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene provare a mano l'**approvazione** dal pannello con un venditore vero. Per provare l'app da un telefono vero, `APP_URL` in `apps/api/.env` deve usare l'IP del PC.
+## Prossimo: giorno 7 – ricerca per distanza
+Ricerca per distanza, città e nome (a lista, ordinata per distanza), scheda negozio con box e recensioni, ritorno alla box dopo la registrazione; è il Traguardo 1 (un cliente trova e vede le box). Servono: la schermata cliente nell'app (oggi un segnaposto), l'endpoint di ricerca con la formula della distanza sulle coordinate dei venditori, e box d'esempio. Prima conviene **provare a mano le box sul telefono** e sistemare l'imprecisione del geocoding (vedi sopra). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -82,7 +94,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–4 sono in `main` (PR #7, #8, #9, #10). Il giorno 5 è sul branch `rebs` (creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
+- Git: i giorni 1–5 sono in `main` (PR #7, #8, #9, #10, #11). Il giorno 6 è sul branch locale `giorno-6-box`, creato da `main`: **non pubblicato** (nessun push, nessuna PR) su richiesta.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.

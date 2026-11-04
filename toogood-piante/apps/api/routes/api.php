@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TokenController;
 use App\Http\Controllers\MeController;
+use App\Http\Controllers\Seller\BoxController;
 use App\Http\Controllers\Seller\DocumentController;
 use App\Http\Controllers\Seller\ProfileController;
 use App\Http\Controllers\Seller\StripeController;
@@ -48,6 +49,14 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::delete('documents/{document}', [DocumentController::class, 'destroy']);
         Route::post('stripe/onboarding', [StripeController::class, 'onboarding']);
         Route::post('stripe/sync', [StripeController::class, 'sync']);
+
+        // Box del giorno (giorno 6)
+        Route::get('box-options', [BoxController::class, 'options']);
+        Route::get('boxes', [BoxController::class, 'index']);
+        Route::post('boxes', [BoxController::class, 'store']);
+        Route::get('boxes/{box}', [BoxController::class, 'show'])->whereNumber('box');
+        Route::put('boxes/{box}', [BoxController::class, 'update'])->whereNumber('box');
+        Route::delete('boxes/{box}', [BoxController::class, 'destroy'])->whereNumber('box');
     });
 
     // Verifica delle attività da parte dell'admin
