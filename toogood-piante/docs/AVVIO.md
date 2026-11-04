@@ -148,12 +148,23 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 
 1. Tocca **Inserisci i dati dell'attività** e compila (valori che il simulatore accetta):
    - Partita IVA: `IT` + 11 cifre che iniziano con 1–8, per esempio `IT12345678901`; **ogni venditore ne vuole una diversa** (`IT22345678901`, `IT33345678901`…), perché sono univoche. Quelle che iniziano con 0 o 9 danno "non valida"; `IT99999999999` simula il servizio giù
-   - Indirizzo: **qualsiasi indirizzo, città o paese d'Italia**, per esempio `Via Garibaldi 12, Bologna` oppure solo `Pesaro` (il controllo usa OpenStreetMap, quindi serve internet)
+   - Indirizzo: **qualsiasi indirizzo, città o paese d'Italia**, scritto **via, numero, città** con la virgola prima della città, per esempio `Via Rizzoli 5, Bologna` o `Via Rossini 10, Pesaro`; oppure solo il nome di una città, come `Pesaro`. Il controllo usa OpenStreetMap (serve internet) e verifica che l'indirizzo esista **proprio in quella città**: un civico che non c'è lì viene rifiutato, indicando dove si trova quello più simile
    - Orari: il ritiro deve stare dentro gli orari di apertura (es. aperto 08:00–19:00, ritiro 17:00–19:00)
 2. **Salva e continua**, poi **Allega un documento** (un PDF, JPG o PNG fino a 5 MB).
 3. Torna al negozio: lo stato è **In verifica**. Tocca **Collega il conto di pagamento** (con il simulatore Stripe il link è solo un esempio), poi **Ho finito: controlla**: compare "Collegato ✓".
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
+
+### Prova le box (giorno 6)
+
+Serve un venditore **approvato dall'admin** e con il **conto di pagamento collegato** (nell'app: "Collega il conto di pagamento", poi "Ho finito: controlla"). Allora nella home del venditore compare **Box di oggi**.
+
+1. Tocca **Nuova box**, scegli tipologia, categoria e caratteristiche; la descrizione del contenuto è facoltativa.
+2. Inserisci il **valore di listino** (es. `20,00`) e uno **sconto** tra 60% e 70%. Il **Riepilogo del prezzo** mostra subito listino, sconto, prezzo, tariffa (1,50 €) e il tuo guadagno. Esempio: 20,00 € con sconto 65% → prezzo 7,00 €, guadagno 5,50 €.
+3. Per vedere l'avviso: listino `3,00` e sconto 70% → prezzo 0,90 €, guadagno **negativo**. Il riepilogo diventa rosso e il pulsante resta spento finché non spunti "Ho capito, pubblica comunque".
+4. **Pubblica la box**: la ritrovi nell'elenco con prezzo, disponibili e guadagno. Toccala per **modificarla** (descrizione, tipologia…; la quantità può solo diminuire) o **eliminarla**.
+
+Per controllare dal PC: `GET /api/seller/boxes` (vedi [API-box.md](API-box.md)). I test automatici dell'app (formula del prezzo): `cd apps/mobile && npm test`.
 
 ### Pannello admin web (giorno 5)
 

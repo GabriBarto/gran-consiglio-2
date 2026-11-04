@@ -30,6 +30,8 @@ Ogni scelta: **cosa**, **perché**, **alternativa**, **dove**.
 ## 4. Geocoding all'inserimento, non alla ricerca
 
 > **Aggiornamento (giorno 5):** il servizio non è più solo simulato. Di default si usa **Nominatim (OpenStreetMap)**, limitato all'Italia, che accetta qualsiasi indirizzo, città o paese; chiede uno User-Agent che identifichi l'app e al massimo una richiesta al secondo (rispettato: si cerca solo quando l'indirizzo cambia). La versione simulata (WireMock, solo Milano e Roma) resta con `GEOCODING_DRIVER=simulated` e nei test, che così non dipendono da internet.
+>
+> **Correzione:** Nominatim restituisce il miglior civico che trova nei dintorni, anche in un altro comune (`Via Garibaldi 12, Bologna` → Sasso Marconi): coordinate sbagliate avrebbero falsato la ricerca per distanza. Ora si chiedono più risultati e si accetta solo quello nel comune scritto dall'utente, con confronto per **uguaglianza** del nome (non "contiene": in OpenStreetMap esistono nomi come "Zona Omogenea Milano Nord" o "Milano Oltre" che contengono la parola ma non sono Milano). Se nessun risultato è nella città giusta si risponde 422 `ADDRESS_CITY_MISMATCH` con il comune più vicino trovato, invece di salvare un posto sbagliato.
 
 
 - **Cosa:** l'indirizzo viene trasformato in latitudine, longitudine e città quando il venditore lo salva, e i valori restano nel database.

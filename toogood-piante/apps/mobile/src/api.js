@@ -85,4 +85,12 @@ export const api = {
   resubmitSeller: () => request('POST', '/seller/resubmit'),
   stripeOnboardingUrl: () => request('POST', '/seller/stripe/onboarding'),
   stripeSync: () => request('POST', '/seller/stripe/sync'),
+
+  // Box del giorno
+  boxOptions: () => request('GET', '/seller/box-options'),
+  boxes: () => request('GET', '/seller/boxes'),
+  box: (id) => request('GET', `/seller/boxes/${id}`),
+  createBox: (data) => request('POST', '/seller/boxes', data),
+  updateBox: (id, data) => request('PUT', `/seller/boxes/${id}`, data),
+  deleteBox: (id) => request('DELETE', `/seller/boxes/${id}`),
 };

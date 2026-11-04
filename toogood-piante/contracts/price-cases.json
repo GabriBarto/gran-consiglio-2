@@ -1,0 +1,16 @@
+{
+  "description": "Casi di prova della formula del prezzo, condivisi da backend (PHP) e app (JavaScript). Importi in centesimi. prezzo = listino × (100 − sconto) / 100, arrotondato al centesimo (mezzo verso l'alto); guadagno = prezzo − tariffa.",
+  "cases": [
+    { "name": "esempio della specifica (RB-04)", "list_value_cents": 2000, "discount_pct": 65, "fee_cents": 150, "price_cents": 700, "earning_cents": 550 },
+    { "name": "sconto minimo", "list_value_cents": 2000, "discount_pct": 60, "fee_cents": 150, "price_cents": 800, "earning_cents": 650 },
+    { "name": "sconto massimo", "list_value_cents": 2000, "discount_pct": 70, "fee_cents": 150, "price_cents": 600, "earning_cents": 450 },
+    { "name": "guadagno positivo ma basso", "list_value_cents": 500, "discount_pct": 65, "fee_cents": 150, "price_cents": 175, "earning_cents": 25 },
+    { "name": "guadagno negativo", "list_value_cents": 300, "discount_pct": 70, "fee_cents": 150, "price_cents": 90, "earning_cents": -60 },
+    { "name": "prezzo zero per listino di un centesimo", "list_value_cents": 1, "discount_pct": 65, "fee_cents": 150, "price_cents": 0, "earning_cents": -150 },
+    { "name": "arrotondamento verso il basso (350,15)", "list_value_cents": 999, "discount_pct": 65, "fee_cents": 150, "price_cents": 350, "earning_cents": 200 },
+    { "name": "mezzo centesimo arrotonda verso l'alto (367,5)", "list_value_cents": 1050, "discount_pct": 65, "fee_cents": 150, "price_cents": 368, "earning_cents": 218 },
+    { "name": "sconto intero qualsiasi", "list_value_cents": 1234, "discount_pct": 63, "fee_cents": 150, "price_cents": 457, "earning_cents": 307 },
+    { "name": "tariffa zero", "list_value_cents": 2000, "discount_pct": 65, "fee_cents": 0, "price_cents": 700, "earning_cents": 700 },
+    { "name": "guadagno esattamente zero", "list_value_cents": 500, "discount_pct": 70, "fee_cents": 150, "price_cents": 150, "earning_cents": 0 }
+  ]
+}

@@ -3,7 +3,7 @@
 App in stile "Too Good To Go" per box a sorpresa di piante. Prototipo per un progetto di studio.
 Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoTecnico.md`.
 
-Stato: giorno 5 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore, pannello admin web). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
+Stato: giorno 6 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore, pannello admin web, box). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
 
 ## Struttura
 
@@ -11,7 +11,7 @@ Stato: giorno 5 di 14 completato (infrastruttura, autenticazione API, app mobile
 apps/api         Laravel (PHP 8.4): API, code, scheduler
 apps/mobile      app React Native / Expo (JavaScript)
 apps/admin       pannello admin React/Vite (JavaScript): coda delle verifiche
-contracts/       specifica OpenAPI e casi di test condivisi (non ancora creata)
+contracts/       casi di test condivisi tra backend e app (formula del prezzo); la specifica OpenAPI non è ancora creata
 docker/          Dockerfile, nginx, risposte dei simulatori
 docker-compose.yml
 ```
@@ -79,5 +79,5 @@ docker compose exec php php artisan clock reset
 
 ## Dati simulati nei servizi esterni
 
-- **Geocoding:** per impostazione usa **OpenStreetMap (Nominatim)**: funziona con qualsiasi indirizzo, città o paese d'Italia e richiede internet. Con `GEOCODING_DRIVER=simulated` in `apps/api/.env` usa WireMock (solo indirizzi che finiscono con "Milano" o "Roma"; "TIMEOUT" simula un timeout), utile offline.
+- **Geocoding:** per impostazione usa **OpenStreetMap (Nominatim)**: funziona con qualsiasi indirizzo, città o paese d'Italia (scritto via, numero, città con la virgola; deve esistere proprio in quella città) e richiede internet. Con `GEOCODING_DRIVER=simulated` in `apps/api/.env` usa WireMock (solo indirizzi che finiscono con "Milano" o "Roma"; "TIMEOUT" simula un timeout), utile offline.
 - **Partita IVA:** `IT` + 11 cifre che iniziano con **1–8** sono valide (es. `IT12345678901`, `IT22345678901`, `IT33345678901`); `IT99999999999` simula servizio non disponibile; quelle che iniziano con 0 o 9 non sono valide. Ogni P.IVA può essere usata da **un solo venditore**: per provare più venditori usane una diversa per ciascuno.

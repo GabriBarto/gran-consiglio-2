@@ -8,6 +8,7 @@ import {
   CheckEmailScreen, ForgotPasswordScreen, LoginCodeScreen, LoginScreen, RegisterScreen, ResetPasswordScreen,
 } from './src/screens/AuthScreens';
 import { AdminHome, ChangePasswordScreen, CustomerHome } from './src/screens/HomeScreens';
+import { BoxFormScreen } from './src/screens/BoxScreens';
 import { SellerHome, SellerProfileScreen } from './src/screens/SellerScreens';
 import { colors } from './src/ui';
 
@@ -43,7 +44,10 @@ function Routes() {
         <>
           <Stack.Screen name="Home" component={HOME_BY_ROLE[user.role] ?? CustomerHome} options={{ headerShown: false }} />
           {user.role === 'SELLER' ? (
-            <Stack.Screen name="SellerProfile" component={SellerProfileScreen} options={{ title: '' }} />
+            <>
+              <Stack.Screen name="SellerProfile" component={SellerProfileScreen} options={{ title: '' }} />
+              <Stack.Screen name="BoxForm" component={BoxFormScreen} options={{ title: '' }} />
+            </>
           ) : null}
         </>
       )}
