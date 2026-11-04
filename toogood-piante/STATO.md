@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello admin web). Giorni 1–4 in `main`; il giorno 5 è sul branch locale `giorno-5-admin` (**non pubblicato**). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello admin web). Giorni 1–4 in `main`; il giorno 5 è sul branch `rebs` (pubblicato, senza PR). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -82,7 +82,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–4 sono in `main` (PR #7, #8, #9, #10). Il giorno 5 è sul branch locale `giorno-5-admin`, creato da `main`: **non è stato pubblicato** (nessun push, nessuna PR) su richiesta.
+- Git: i giorni 1–4 sono in `main` (PR #7, #8, #9, #10). Il giorno 5 è sul branch `rebs` (creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
