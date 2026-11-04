@@ -42,10 +42,28 @@ class OrderController extends Controller
         ], 201);
     }
 
+    /**
+     * Storico degli ordini del cliente (US-C11), dal più recente, fino a 50. Non compaiono gli ordini mai pagati
+     * e già chiusi (scaduti o con pagamento fallito): per il cliente non sono ordini. Quelli ancora in attesa sì,
+     * con `reserved_until` per ricordargli fino a quando può pagare.
+     */
+    public function index(Request $request): JsonResponse
+    {
+        $orders = Order::where('customer_id', $request->user()->id)
+            ->whereNotIn('status', [Order::EXPIRED, Order::PAYMENT_FAILED])
+            ->with(['items.box', 'seller', 'reservations'])
+            ->orderByDesc('id')->limit(50)->get();
+
+        return response()->json([
+            'payment_simulated' => $this->simulated(),
+            'data' => $orders->map(fn (Order $o) => OrderResource::make($o))->all(),
+        ]);
+    }
+
     /** Stato di un proprio ordine: l'app lo rilegge dopo il pagamento per sapere se è PAID. */
     public function show(Request $request, int $order): JsonResponse
     {
-        return response()->json(OrderResource::make($this->own($request, $order)));
+        return response()->json(OrderResource::make($this->own($request, $order)) + ['payment_simulated' => $this->simulated()]);
     }
 
     /**

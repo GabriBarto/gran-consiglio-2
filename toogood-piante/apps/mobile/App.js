@@ -5,11 +5,13 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from './src/AuthContext';
+import { CartProvider } from './src/CartContext';
 import {
   CheckEmailScreen, ForgotPasswordScreen, LoginCodeScreen, LoginScreen, RegisterScreen, ResetPasswordScreen,
 } from './src/screens/AuthScreens';
 import { AdminHome, ChangePasswordScreen } from './src/screens/HomeScreens';
 import { BoxFormScreen } from './src/screens/BoxScreens';
+import { CartScreen, CheckoutScreen, OrderScreen, OrdersScreen } from './src/screens/OrderScreens';
 import { SellerHome, SellerProfileScreen } from './src/screens/SellerScreens';
 import { ShopScreen, ShopsScreen } from './src/screens/ShopScreens';
 import { clearPendingBox, loadPendingBox } from './src/pendingBox';
@@ -69,6 +71,10 @@ function Routes({ navReady }) {
             <>
               <Stack.Screen name="Shops" component={ShopsScreen} />
               <Stack.Screen name="Shop" component={ShopScreen} options={{ title: '' }} />
+              <Stack.Screen name="Cart" component={CartScreen} options={{ title: '' }} />
+              <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: '' }} />
+              <Stack.Screen name="Order" component={OrderScreen} options={{ title: '' }} />
+              <Stack.Screen name="Orders" component={OrdersScreen} options={{ title: '' }} />
             </>
           ) : (
             <Stack.Screen name="Home" component={HOME_BY_ROLE[user.role]} options={{ headerShown: false }} />
@@ -91,9 +97,11 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <NavigationContainer ref={navigationRef} onReady={() => setNavReady(true)}>
-          <Routes navReady={navReady} />
-        </NavigationContainer>
+        <CartProvider>
+          <NavigationContainer ref={navigationRef} onReady={() => setNavReady(true)}>
+            <Routes navReady={navReady} />
+          </NavigationContainer>
+        </CartProvider>
       </AuthProvider>
       <StatusBar style="dark" />
     </SafeAreaProvider>

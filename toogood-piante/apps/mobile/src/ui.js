@@ -87,6 +87,29 @@ export function Chips({ label, options, value, onChange, multi = false, disabled
   );
 }
 
+// Quantità con − e +: da `min` a `max` (se `max` è minore di `min` resta fermo a `min`).
+export function Stepper({ value, min = 1, max, onChange }) {
+  const button = (label, delta, off) => (
+    <Pressable
+      onPress={() => { if (!off) onChange(value + delta); }}
+      style={{
+        width: 40, height: 40, borderRadius: 20, borderWidth: 1, alignItems: 'center', justifyContent: 'center',
+        borderColor: off ? colors.border : colors.green, opacity: off ? 0.4 : 1,
+      }}
+    >
+      <Text style={{ fontSize: 22, color: colors.green, fontWeight: '700' }}>{label}</Text>
+    </Pressable>
+  );
+
+  return (
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
+      {button('−', -1, value <= min)}
+      <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, minWidth: 28, textAlign: 'center' }}>{value}</Text>
+      {button('+', 1, value >= max)}
+    </View>
+  );
+}
+
 export const Card = ({ children, style }) => (
   <View style={[{ backgroundColor: '#fff', borderRadius: 12, borderWidth: 1, borderColor: colors.border, padding: 16, marginBottom: 16 }, style]}>
     {children}

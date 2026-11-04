@@ -24,7 +24,8 @@ Il **carrello vive nell'app**: al server arriva soltanto al momento del checkout
 | Metodo | Percorso | Descrizione |
 |---|---|---|
 | POST | `/orders` | Crea l'ordine in attesa di pagamento e tiene da parte le box. 201. Limite: 20 richieste al minuto per utente. |
-| GET | `/orders/{id}` | Stato di un **proprio** ordine (404 se è di un altro). L'app lo rilegge dopo il pagamento. |
+| GET | `/orders` | Storico degli ordini del cliente (US-C11): ultimi 50, dal più recente. Risposta `{ payment_simulated, data: [ordine] }`. Non compaiono gli ordini scaduti o con pagamento fallito (mai pagati); compaiono quelli in attesa (con `reserved_until`), pagati e rimborsati. |
+| GET | `/orders/{id}` | Stato di un **proprio** ordine (404 se è di un altro), più `payment_simulated`. L'app lo rilegge dopo il pagamento. |
 | POST | `/orders/{id}/simulate-payment` | **Solo sviluppo.** Esegue il pagamento di prova (vedi sotto). 404 con Stripe vero. |
 | POST | `/webhooks/stripe` | Riceve gli eventi di Stripe. Verifica la firma; 400 se non valida. |
 
@@ -110,5 +111,4 @@ Il controllo e il calo dello stock sono un passo unico: le righe delle box si bl
 ## Limiti noti
 
 - Il **QR di ritiro** e il **pagamento al venditore** non ci sono ancora (giorni 10 e 11); la conferma lo promette già nell'email.
-- Nessun elenco ordini (`GET /orders`): arriva con lo storico del giorno 9.
 - Con Stripe vero (non il simulatore) servono le chiavi di test, `STRIPE_API_BASE` vuoto, `STRIPE_PUBLISHABLE_KEY` e il profilo `stripe` di Docker per inoltrare i webhook.

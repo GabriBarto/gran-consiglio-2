@@ -155,9 +155,26 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
 
-### Prova gli ordini e i pagamenti (giorno 8, solo API: l'app è il giorno 9)
+### Prova l'acquisto dall'app (giorno 9)
 
-Nell'app non c'è ancora il carrello. Si prova con PowerShell o con i test automatici.
+Serve un negozio **approvato, con il conto collegato e una box di oggi** (vedi "Prova le box") e un account **cliente** (registrato dall'app, con l'email confermata). Il pagamento è **di prova**: non serve nessuna carta.
+
+1. Accedi come **cliente** e cerca il negozio (anche per città o nome). Aprilo.
+2. Su una box scegli la quantità con **−** e **+** (non oltre le box disponibili) e tocca **Aggiungi al carrello**. Prova ad aggiungere box di **un altro negozio**: l'app chiede conferma e svuota il carrello.
+3. Tocca **Vai al carrello** (o **Carrello** nella ricerca). Cambia le quantità o togli una riga. Vedi totale, "risparmi almeno", fascia di ritiro e orario limite.
+4. **Procedi al pagamento**: leggi l'avviso rosso, **spunta "Ho capito e accetto"** (senza, il pulsante resta spento) e tocca **Conferma e paga**. Parte il **conto alla rovescia di 10 minuti**: le box sono tue.
+5. Tocca **Paga (prova)**: arrivi alla **conferma dell'ordine**. In Mailpit (http://localhost:8025) trovi "Ordine TG-… confermato" (al cliente) e "Nuovo ordine TG-…" (al venditore).
+6. **I miei ordini** (nella ricerca): lo storico con lo stato.
+
+Cose da provare:
+- **Pagamento fallito:** al passo 5 tocca "Simula un pagamento fallito": le box tornano disponibili (controlla la scheda del negozio).
+- **Scadenza:** al passo 4 non pagare; dal PC `docker compose exec php php artisan clock advance 11m` poi `docker compose exec php php artisan reservations:release` e infine `docker compose exec php php artisan clock reset`. Tornando nell'app il pagamento non è più possibile.
+- **Stock che finisce:** con due clienti, uno compra l'ultima box mentre l'altro ha il carrello aperto: al secondo l'app elenca le box mancanti e dice che non è stato addebitato nulla; riaprendo il carrello la riga sparisce.
+- **Orario limite:** per un negozio con ritiro che finisce tra meno di 2 ore le box compaiono "Ordini chiusi".
+
+### Prova gli ordini e i pagamenti senza app (giorno 8)
+
+Questa è la prova **senza app** (PowerShell e test automatici); l'acquisto dall'app è la sezione qui sopra.
 
 **Test automatici** (non toccano il tuo database):
 
