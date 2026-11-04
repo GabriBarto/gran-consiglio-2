@@ -35,7 +35,7 @@ La **tariffa** (`fee_cents`, oggi 150) e i limiti dello sconto (`discount_min_pc
 | `box_type_id` | Obbligatorio. ID di una tipologia (`box_types`). |
 | `category_id` | Obbligatorio. ID di una categoria. |
 | `attributes` | Facoltativo. Elenco di codici (`INDOOR`, `TOXIC_PETS`…), max 10, ognuno esistente. |
-| `description` | Obbligatorio, 5–1000 caratteri. |
+| `description` | **Facoltativa**, fino a 1000 caratteri. Vuota o solo spazi vale come assente (`null`); in modifica `null` o `""` la cancella, non inviarla non la tocca. |
 | `list_value_cents` | Obbligatorio, intero 1–1.000.000 (nessun minimo di listino o prezzo oltre 1 centesimo). |
 | `discount_pct` | Obbligatorio, intero tra 60 e 70 (limiti da `config_params`). |
 | `quantity` | Obbligatorio, intero 1–999. |

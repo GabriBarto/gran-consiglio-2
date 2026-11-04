@@ -33,7 +33,7 @@ export function TodayBoxes({ navigation }) {
       {data?.data.map((box) => (
         <Pressable key={box.id} onPress={() => navigation.navigate('BoxForm', { boxId: box.id })} style={{ paddingVertical: 10, borderTopWidth: 1, borderTopColor: colors.border }}>
           <Text style={{ fontWeight: '700', color: colors.text }}>{box.box_type.label}</Text>
-          <Text style={{ color: colors.muted }} numberOfLines={1}>{box.category.label} · {box.description}</Text>
+          <Text style={{ color: colors.muted }} numberOfLines={1}>{box.category.label}{box.description ? ` · ${box.description}` : ''}</Text>
           <Text style={{ color: colors.text, marginTop: 4 }}>
             {formatEuro(box.price_cents)} · disponibili {box.stock_available} su {box.stock_total}
             {box.sold_out ? ' · esaurita' : ''}
@@ -79,7 +79,7 @@ export function BoxFormScreen({ route, navigation }) {
           setTypeId(b.box_type.id);
           setCategoryId(b.category.id);
           setAttributes(b.attributes);
-          setDescription(b.description);
+          setDescription(b.description ?? '');
           setListText((b.list_value_cents / 100).toFixed(2).replace('.', ','));
           setDiscount(b.discount_pct);
           setQuantityText(String(b.stock_total));
@@ -111,7 +111,7 @@ export function BoxFormScreen({ route, navigation }) {
   const preview = listCents && listCents > 0 ? quote(listCents, discount, options.fee_cents) : null;
   const notPositive = preview ? preview.earning_cents <= 0 : false;
 
-  const valid = typeId && categoryId && description.trim().length >= 5 && preview && quantity && quantity >= 1
+  const valid = typeId && categoryId && preview && quantity && quantity >= 1
     && (!notPositive || confirmLow);
 
   const submit = () => save.run(async () => {
@@ -119,7 +119,7 @@ export function BoxFormScreen({ route, navigation }) {
       box_type_id: typeId,
       category_id: categoryId,
       attributes,
-      description: description.trim(),
+      description: description.trim() || null, // facoltativa: vuota = nessuna descrizione
       quantity,
       confirm_low_earning: confirmLow,
     };
@@ -158,7 +158,7 @@ export function BoxFormScreen({ route, navigation }) {
       <Chips label="Categoria" options={options.categories.map((c) => ({ key: c.id, label: c.label }))} value={categoryId} onChange={setCategoryId} />
       <Chips label="Caratteristiche delle piante" options={attributeOptions} value={attributes} onChange={setAttributes} multi />
 
-      <Field label="Contenuto (descrizione generale)" value={description} onChangeText={setDescription} multiline numberOfLines={3} autoCapitalize="sentences" placeholder="Es. Tre piante grasse miste in vaso da 10 cm" style={{ minHeight: 80, textAlignVertical: 'top' }} />
+      <Field label="Contenuto (descrizione generale, facoltativa)" value={description} onChangeText={setDescription} multiline numberOfLines={3} autoCapitalize="sentences" placeholder="Es. Tre piante grasse miste in vaso da 10 cm" style={{ minHeight: 80, textAlignVertical: 'top' }} />
 
       <Field label="Valore di listino del contenuto (€)" value={listText} onChangeText={setListText} keyboardType="decimal-pad" placeholder="20,00" editable={!priceLocked} />
       <Chips

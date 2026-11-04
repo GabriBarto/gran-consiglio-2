@@ -75,7 +75,7 @@ class BoxController extends Controller
         $box->box_type_id = $data['box_type_id'];
         $box->category_id = $data['category_id'];
         $box->setPlantAttributes($data['attributes'] ?? []);
-        $box->description = trim($data['description']);
+        $box->description = $this->cleanDescription($data['description'] ?? null);
         $box->list_value_cents = $quote['list_value_cents'];
         $box->discount_pct = $quote['discount_pct'];
         $box->price_cents = $quote['price_cents'];
@@ -134,7 +134,7 @@ class BoxController extends Controller
                 $offer->setPlantAttributes($data['attributes']);
             }
             if (array_key_exists('description', $data)) {
-                $offer->description = trim($data['description']);
+                $offer->description = $this->cleanDescription($data['description']);
             }
 
             $offer->save();
@@ -185,12 +185,21 @@ class BoxController extends Controller
             'category_id' => [$required, 'integer', Rule::exists('categories', 'id')],
             'attributes' => ['sometimes', 'array', 'max:10'],
             'attributes.*' => ['string', Rule::exists('plant_attributes', 'code')],
-            'description' => [$required, 'string', 'min:5', 'max:1000'],
+            // Facoltativa (anche in modifica: null o vuota la cancella)
+            'description' => ['nullable', 'string', 'max:1000'],
             'list_value_cents' => [$required, 'integer', 'min:1', 'max:1000000'],
             'discount_pct' => [$required, 'integer', 'between:'.$this->config->discountMin().','.$this->config->discountMax()],
             'quantity' => [$required, 'integer', 'min:1', 'max:'.self::MAX_QUANTITY],
             'confirm_low_earning' => ['sometimes', 'boolean'],
         ]);
+    }
+
+    /** Testo senza spazi ai bordi; vuoto o assente diventa NULL. */
+    private function cleanDescription(?string $text): ?string
+    {
+        $text = trim((string) $text);
+
+        return $text === '' ? null : $text;
     }
 
     /** Prezzo ≤ tariffa: il guadagno è nullo o negativo e il venditore deve confermare di averlo capito. */

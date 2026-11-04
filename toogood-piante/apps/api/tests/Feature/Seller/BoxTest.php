@@ -149,10 +149,48 @@ class BoxTest extends TestCase
 
         $this->actingAsUser($seller->user)->postJson('/api/seller/boxes', [])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors(['box_type_id', 'category_id', 'description', 'list_value_cents', 'discount_pct', 'quantity']);
+            ->assertJsonValidationErrors(['box_type_id', 'category_id', 'list_value_cents', 'discount_pct', 'quantity'])
+            ->assertJsonMissingValidationErrors('description');
 
         $this->actingAsUser($seller->user)->postJson('/api/seller/boxes', $this->payload(['attributes' => ['INVENTATO'], 'category_id' => 999]))
             ->assertUnprocessable()->assertJsonValidationErrors(['attributes.0', 'category_id']);
+    }
+
+    public function test_la_descrizione_e_facoltativa(): void
+    {
+        $seller = $this->publisher();
+        $without = $this->payload();
+        unset($without['description']);
+
+        $this->actingAsUser($seller->user)->postJson('/api/seller/boxes', $without)
+            ->assertCreated()->assertJsonPath('description', null);
+
+        // Vuota o fatta solo di spazi vale come assente
+        foreach (['', '   '] as $empty) {
+            $this->actingAsUser($seller->user)->postJson('/api/seller/boxes', $this->payload(['description' => $empty]))
+                ->assertCreated()->assertJsonPath('description', null);
+        }
+
+        // Una descrizione breve è accettata (nessun minimo), una troppo lunga no
+        $this->actingAsUser($seller->user)->postJson('/api/seller/boxes', $this->payload(['description' => 'Mista']))
+            ->assertCreated()->assertJsonPath('description', 'Mista');
+        $this->actingAsUser($seller->user)->postJson('/api/seller/boxes', $this->payload(['description' => str_repeat('a', 1001)]))
+            ->assertUnprocessable()->assertJsonValidationErrors('description');
+    }
+
+    public function test_la_descrizione_si_aggiunge_e_si_cancella_in_modifica(): void
+    {
+        $seller = $this->publisher();
+        $box = $this->create($seller);
+
+        $put = fn (array $data) => $this->actingAsUser($seller->user)->putJson("/api/seller/boxes/{$box['id']}", $data);
+
+        $put(['description' => null])->assertOk()->assertJsonPath('description', null);
+        $put(['description' => '  Due felci  '])->assertOk()->assertJsonPath('description', 'Due felci');
+        $put(['description' => ''])->assertOk()->assertJsonPath('description', null);
+        // Non inviarla non la tocca
+        $put(['description' => 'Tre piante'])->assertOk();
+        $put(['quantity' => 4])->assertOk()->assertJsonPath('description', 'Tre piante');
     }
 
     public function test_con_guadagno_non_positivo_serve_la_conferma_esplicita(): void

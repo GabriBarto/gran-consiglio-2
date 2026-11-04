@@ -159,7 +159,7 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 
 Serve un venditore **approvato dall'admin** e con il **conto di pagamento collegato** (nell'app: "Collega il conto di pagamento", poi "Ho finito: controlla"). Allora nella home del venditore compare **Box di oggi**.
 
-1. Tocca **Nuova box**, scegli tipologia, categoria e caratteristiche, descrivi il contenuto.
+1. Tocca **Nuova box**, scegli tipologia, categoria e caratteristiche; la descrizione del contenuto è facoltativa.
 2. Inserisci il **valore di listino** (es. `20,00`) e uno **sconto** tra 60% e 70%. Il **Riepilogo del prezzo** mostra subito listino, sconto, prezzo, tariffa (1,50 €) e il tuo guadagno. Esempio: 20,00 € con sconto 65% → prezzo 7,00 €, guadagno 5,50 €.
 3. Per vedere l'avviso: listino `3,00` e sconto 70% → prezzo 0,90 €, guadagno **negativo**. Il riepilogo diventa rosso e il pulsante resta spento finché non spunti "Ho capito, pubblica comunque".
 4. **Pubblica la box**: la ritrovi nell'elenco con prezzo, disponibili e guadagno. Toccala per **modificarla** (descrizione, tipologia…; la quantità può solo diminuire) o **eliminarla**.
