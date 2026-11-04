@@ -155,6 +155,43 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
 
+### Prova gli ordini e i pagamenti (giorno 8, solo API: l'app è il giorno 9)
+
+Nell'app non c'è ancora il carrello. Si prova con PowerShell o con i test automatici.
+
+**Test automatici** (non toccano il tuo database):
+
+```bash
+docker compose --profile test run --rm php-test php artisan test --filter="CheckoutTest|StripeWebhookTest|ReservationReleaseTest"
+```
+
+**A mano, da PowerShell**, con un negozio approvato, con conto collegato e una box di oggi (vedi "Prova le box") e un account **cliente**. Servono il token del cliente (accesso con codice da Mailpit) e l'`id` della box (`GET /api/shops/{id}` o `GET /api/seller/boxes`):
+
+```powershell
+$api = "http://localhost:8080/api"
+$json = @{ Accept = "application/json" }
+$c = Invoke-RestMethod -Method Post -Uri "$api/auth/login" -Headers $json -ContentType "application/json" -Body (@{email="IL-TUO-CLIENTE@example.com"; password=(Read-Host "Password")} | ConvertTo-Json)
+$t = Invoke-RestMethod -Method Post -Uri "$api/auth/login/verify" -Headers $json -ContentType "application/json" -Body (@{challenge_id=$c.challenge_id; code=(Read-Host "Codice da Mailpit")} | ConvertTo-Json)
+$auth = @{ Accept = "application/json"; Authorization = "Bearer $($t.access_token)" }
+
+# 1. Ordine: le box restano tue per 10 minuti (sostituisci 12 con l'id della box)
+$o = Invoke-RestMethod -Method Post -Uri "$api/orders" -Headers $auth -ContentType "application/json" -Body '{"items":[{"box_id":12,"quantity":1}],"accept_no_refund":true}'
+$o | Select-Object number, status, total_cents, reserved_until
+
+# 2. Pagamento di prova: passa dallo stesso codice del webhook vero
+Invoke-RestMethod -Method Post -Uri "$api/orders/$($o.id)/simulate-payment" -Headers $auth | Select-Object number, status, paid_at
+```
+
+Poi apri **Mailpit** (http://localhost:8025): trovi "Ordine TG-… confermato" (al cliente) e "Nuovo ordine TG-…" (al venditore). Per vedere la **scadenza** (box che tornano disponibili): crea l'ordine, **non** pagare, e lancia
+
+```bash
+docker compose exec php php artisan clock advance 11m
+docker compose exec php php artisan reservations:release
+docker compose exec php php artisan clock reset
+```
+
+L'ordine diventa `EXPIRED` e lo stock torna com'era. Il token dura 15 minuti.
+
 ### Prova la ricerca dei negozi (giorno 7)
 
 Serve almeno un negozio **approvato, con il conto collegato e una box di oggi** (vedi la prova delle box qui sotto). L'app ora si apre sull'elenco dei negozi, anche senza accesso.

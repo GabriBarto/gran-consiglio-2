@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 7 completato e provato** (ricerca e scheda negozio provate dall'app). Giorni 1–6 in `main` (PR #7–#13); il giorno 7 è sul branch `andres` (pubblicato il 2026-11-04, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 8 completato lato server e provato sull'API (nessuna schermata nuova: l'app è il giorno 9)**. Giorni 1–7 in `main` (PR #7–#15); il giorno 8 è sul branch `andres` (pubblicato il 2026-11-04, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -12,10 +12,12 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 7 completato e provato** (ricerca 
   - [Giorno 5 – pannello admin web](docs/scelte/giorno-5-pannello-admin.md)
   - [Giorno 6 – box](docs/scelte/giorno-6-box.md)
   - [Giorno 7 – ricerca e scheda negozio](docs/scelte/giorno-7-ricerca.md)
+  - [Giorno 8 – ordini, stock riservato e pagamenti](docs/scelte/giorno-8-ordini.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
 - Endpoint delle box e formula del prezzo: [docs/API-box.md](docs/API-box.md)
 - Endpoint di ricerca e scheda dei negozi (pubblici): [docs/API-negozi.md](docs/API-negozi.md)
+- Endpoint degli ordini, dei pagamenti e del webhook Stripe: [docs/API-ordini.md](docs/API-ordini.md)
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -82,6 +84,18 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 7 completato e provato** (ricerca 
 - Limiti noti: nessuna paginazione (max 50 negozi); il nome non tollera i refusi (roadmap R3); niente vista su mappa né filtri per categoria/prezzo (roadmap R3); recensioni vuote finché non esistono (giorno 12).
 - Per provare serve almeno un negozio **approvato, con conto collegato e una box di oggi** (il giorno 13 aggiungerà dati di prova). La fascia di ritiro del negozio decide fino a quando si ordina: se è già passata l'orario limite, le box risultano "Ordini chiusi" (si può simulare con `php artisan clock advance` / `reset`).
 
+**Giorno 8 – ordini, stock riservato, pagamento e webhook** (endpoint: [docs/API-ordini.md](docs/API-ordini.md)) — solo lato server; carrello, checkout e storico nell'app sono il **giorno 9**:
+- `POST /orders` (solo clienti): dal carrello (righe box+quantità, un solo negozio) crea un ordine **in attesa di pagamento**, tiene da parte le box per **10 minuti** e crea il PaymentIntent. Controlla: casella "nessun rimborso" accettata, orario limite (`OrderWindow`), negozio vendibile, box di oggi, stock, minimo di Stripe (0,50 €). Se manca anche una sola box non si prenota nulla e non si crea alcun pagamento. Prezzo e tariffa sono copiati dalla box (istantanea). Rifare il carrello libera l'ordine in attesa precedente.
+- `GET /orders/{id}` (proprio ordine). Stati: `PENDING_PAYMENT → PAID`, `PAYMENT_FAILED`, `EXPIRED`, `REFUNDED_FULL`.
+- `POST /webhooks/stripe`: firma verificata (segreto `STRIPE_WEBHOOK_SECRET`), idempotente (tabella `stripe_events` + controllo dello stato con riga bloccata). `succeeded` → pagato + email al cliente (conferma) e al venditore (nuovo ordine); `payment_failed` → stock restituito; **pagamento tardivo** (ordine già scaduto) → rimborso automatico per intero + email. Se il rimborso fallisce il webhook risponde 500 e Stripe riprova.
+- Comando `reservations:release` ogni minuto (scheduler): libera le prenotazioni scadute e annulla il PaymentIntent. In sviluppo: `php artisan clock advance 11m`, poi `reservations:release`, poi `clock reset`.
+- **Pagamento simulato** (solo sviluppo, `PAYMENTS_SIMULATED`): `POST /orders/{id}/simulate-payment` passa dallo stesso codice del webhook vero (con `stripe-mock` non ci sono carte né webhook). Attivo da solo se `STRIPE_API_BASE` punta a stripe-mock; 404 con Stripe vero.
+- Nuovi: modelli `Order`, `OrderItem`, `StockReservation`; servizi `CheckoutService`, `OrderLifecycle`, `PaymentEventHandler`, `PaymentService`; 3 email; variabili `STRIPE_PUBLISHABLE_KEY` e `PAYMENTS_SIMULATED` in `.env.example`. **Nessuna migrazione** (le tabelle c'erano dal giorno 1).
+- Test: **206 su 206** backend (38 nuovi: checkout, stock, orario limite, firma del webhook, idempotenza, pagamento fallito, pagamento tardivo con rimborso, scadenza). Provato dal vivo con **lo stripe-mock vero**: ordine, pagamento simulato, due email in Mailpit, webhook con firma vera (sbagliata → 400, giusta → pagato, ripetuta → ignorata), scadenza con orologio simulato.
+- **Provato con richieste parallele** (8 e 16 acquisti insieme su una box da 3 pezzi): sempre 3 box tenute da parte, mai sotto zero. Il primo tentativo ha rivelato un **deadlock di MySQL** (un errore 500 su 8, senza danni allo stock): corretto togliendo un blocco a intervallo e ripetendo la transazione in caso di deadlock (dettagli nelle note sulle scelte).
+- Limiti noti: manca il QR di ritiro (giorno 10) e il pagamento al venditore (giorno 11), anche se l'email di conferma li menziona già; nessun elenco ordini; con Stripe vero servono chiavi di test e il profilo Docker `stripe` per i webhook (mai provato: si è usato il simulatore).
+- Per provare a mano senza l'app serve un cliente con un token (vedi [docs/AVVIO.md](docs/AVVIO.md)).
+
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
 - Una P.IVA inesistente è rifiutata; se il servizio di verifica è giù il profilo si salva con controllo "non verificato" e decide l'admin.
@@ -93,8 +107,8 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 7 completato e provato** (ricerca 
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 8 – carrello, pagamento e conferma
-Carrello di un solo negozio, stock riservato 10 minuti (decremento atomico, con il blocco di riga già usato per le box), avviso "nessun rimborso" accettato, PaymentIntent Stripe di prova, webhook con idempotenza, email di conferma a cliente e venditore. Riusa `OrderWindow` (limite d'ordine 2 ore prima della fine del ritiro) e deve gestire il prezzo 0 (Stripe vuole almeno 0,50 €, vedi [docs/API-box.md](docs/API-box.md)). Prima conviene **provare a mano la ricerca sul telefono**, compreso il giro visitatore → "Accedi per acquistare" → registrazione → conferma email → primo accesso → ritorno alla box. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+## Prossimo: giorno 9 – app cliente: carrello, checkout e storico ordini
+Nell'app: "Aggiungi al carrello" sulla scheda del negozio (un solo negozio, quantità fino allo stock), carrello con totale, risparmio minimo, fascia di ritiro e orario limite, checkout con la casella "nessun rimborso", pagamento (con il simulatore: pulsante che chiama `simulate-payment`; con Stripe vero servirà l'SDK di Stripe e `client_secret`), schermata di conferma e **storico degli ordini** (serve `GET /orders`, da aggiungere). Va gestito il conto alla rovescia dei 10 minuti (`reserved_until`) e l'errore `OUT_OF_STOCK`. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene **provare a mano il giro API** (vedi AVVIO.md) e controllare le email in Mailpit.
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -106,7 +120,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è sul branch `andres` (da `giorno-7-ricerca`, creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
+- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è sul branch `andres` (da `giorno-8-carrello`, creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
