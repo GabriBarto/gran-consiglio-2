@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 7 scritto e provato sull'API; schermate della ricerca non ancora provate su telefono**. Giorni 1–6 in `main` (PR #7–#13); il giorno 7 è sul branch locale `giorno-7-ricerca` (**non pubblicato**, nessun push). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 7 completato e provato** (ricerca e scheda negozio provate dall'app). Giorni 1–6 in `main` (PR #7–#13); il giorno 7 è sul branch `andres` (pubblicato il 2026-11-04, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -78,7 +78,7 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 7 scritto e provato sull'API; sche
 - `OrderWindow`: orario limite = fine ritiro − 2 ore (parametro `order_cutoff_hours`), deciso dal server; sarà riusato dal carrello.
 - App: si apre sull'elenco dei negozi (non più sul login). Chiede la posizione all'avvio (se negata si cerca per città o nome). Scheda negozio con box. Visitatore: "Accedi per acquistare" salva negozio e box su disco e porta al login; dopo il **primo accesso da cliente** si torna alla scheda con la box evidenziata, con messaggio se nel frattempo è esaurita, eliminata o oltre l'orario limite. Cliente: vede le box ma l'acquisto arriva col carrello (giorno 8).
 - Nuovi: `expo-location` (permesso della posizione nell'`app.json`: serve un **`npm install`** dopo il pull), `docs/API-negozi.md`.
-- Test: **168 su 168** backend (18 nuovi sulla ricerca: ordine e distanze verificati con Haversine, filtri, privacy, orario limite, recensioni) e 15 su 15 dell'app. Provato dal vivo sull'API con tre negozi di prova (Bologna, Pesaro, Milano: Pesaro a 141 km da Bologna). Bundle Android ok. **Le schermate non sono state provate su telefono**, né il ritorno alla box dopo la registrazione.
+- Test: **168 su 168** backend (18 nuovi sulla ricerca: ordine e distanze verificati con Haversine, filtri, privacy, orario limite, recensioni) e 15 su 15 dell'app. Provato dal vivo sull'API con tre negozi di prova (Bologna, Pesaro, Milano: Pesaro a 141 km da Bologna). Bundle Android ok. **L'app è stata provata a mano sul telefono: ricerca e schede funzionano.**
 - Limiti noti: nessuna paginazione (max 50 negozi); il nome non tollera i refusi (roadmap R3); niente vista su mappa né filtri per categoria/prezzo (roadmap R3); recensioni vuote finché non esistono (giorno 12).
 - Per provare serve almeno un negozio **approvato, con conto collegato e una box di oggi** (il giorno 13 aggiungerà dati di prova). La fascia di ritiro del negozio decide fino a quando si ordina: se è già passata l'orario limite, le box risultano "Ordini chiusi" (si può simulare con `php artisan clock advance` / `reset`).
 
@@ -106,7 +106,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è sul branch locale `giorno-7-ricerca`, creato da `main`: **non pubblicato** (nessun push, nessuna PR) su richiesta.
+- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è sul branch `andres` (da `giorno-7-ricerca`, creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
