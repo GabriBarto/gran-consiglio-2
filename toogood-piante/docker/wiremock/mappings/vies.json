@@ -15,6 +15,15 @@
       "response": { "status": 503, "jsonBody": { "error": "servizio non disponibile" } }
     },
     {
+      "priority": 5,
+      "request": { "method": "GET", "urlPathPattern": "/vies/check/IT[1-8][0-9]{10}" },
+      "response": {
+        "status": 200,
+        "headers": { "Content-Type": "application/json" },
+        "jsonBody": { "valid": true, "name": "Vivaio di prova S.r.l.", "address": "Italia" }
+      }
+    },
+    {
       "priority": 10,
       "request": { "method": "GET", "urlPathPattern": "/vies/check/.*" },
       "response": {

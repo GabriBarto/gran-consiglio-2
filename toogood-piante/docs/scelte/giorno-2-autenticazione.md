@@ -10,7 +10,9 @@ Ogni scelta: **cosa**, **perché**, **alternativa**, **dove**.
 
 - **Cosa:** `POST /auth/login` (email e password) invia un codice a 6 cifre; `POST /auth/login/verify` lo scambia con i token.
 - **Perché:** una password rubata da sola non basta per entrare. Il prodotto gestisce pagamenti e rimborsi, quindi vale la pena avere un secondo fattore.
-- **Alternativa scartata:** chiedere il codice solo da un "nuovo dispositivo", come nel piano iniziale. Richiede di riconoscere i dispositivi in modo affidabile (complicato e facile da aggirare). Chiederlo **a ogni accesso** è più semplice e più sicuro; il costo per l'utente è basso perché la sessione dura 30 giorni grazie al refresh token.
+- **Prima versione (giorno 2):** il codice veniva chiesto **a ogni accesso**, per semplicità.
+- **Aggiornamento (giorno 5):** nell'uso reale era fastidioso (anche dopo un'uscita volontaria). Ora il codice è chiesto **solo la prima volta su un dispositivo** (o dopo cambio password, 90 giorni di inattività, riuso sospetto dei token). Il dispositivo non si "riconosce" da dati facili da falsificare: dopo un codice corretto il server genera un token casuale (64 caratteri, nel database solo l'hash) che l'app tiene nel deposito sicuro del telefono. La password resta sempre richiesta, e il token è legato all'utente. **L'admin è escluso**: per l'account più potente il secondo fattore resta a ogni accesso.
+- **Dove:** [TrustedDeviceService.php](../../apps/api/app/Services/Auth/TrustedDeviceService.php).
 - **Dove:** [LoginController.php](../../apps/api/app/Http/Controllers/Auth/LoginController.php), [TwoFactorService.php](../../apps/api/app/Services/Auth/TwoFactorService.php).
 
 ### Come è protetto il codice

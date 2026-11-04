@@ -3,14 +3,14 @@
 App in stile "Too Good To Go" per box a sorpresa di piante. Prototipo per un progetto di studio.
 Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoTecnico.md`.
 
-Stato: giorno 4 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
+Stato: giorno 5 di 14 completato (infrastruttura, autenticazione API, app mobile con accesso, onboarding e verifica del venditore, pannello admin web). Dettagli e come riprendere in [STATO.md](STATO.md). Guida all'avvio: [docs/AVVIO.md](docs/AVVIO.md). Motivazione delle scelte tecniche: cartella [docs/scelte](docs/scelte).
 
 ## Struttura
 
 ```
 apps/api         Laravel (PHP 8.4): API, code, scheduler
 apps/mobile      app React Native / Expo (JavaScript)
-apps/admin       pannello admin React/Vite (non ancora creato)
+apps/admin       pannello admin React/Vite (JavaScript): coda delle verifiche
 contracts/       specifica OpenAPI e casi di test condivisi (non ancora creata)
 docker/          Dockerfile, nginx, risposte dei simulatori
 docker-compose.yml
@@ -50,7 +50,7 @@ Si apre con Expo Go sul telefono (stessa rete del PC) o con un emulatore. L'indi
 | Mailpit | http://localhost:8025 | Tutte le email inviate dall'app (2FA, conferme d'ordine) |
 | MySQL | localhost:3307 | utente `toogood` / password `secret` / database `toogood` (solo sviluppo) |
 | stripe-mock | http://localhost:12111 | API Stripe simulata (senza stato né webhook) |
-| WireMock | http://localhost:8089 | Geocoding e verifica P.IVA simulati (vedi `docker/wiremock/mappings`) |
+| WireMock | http://localhost:8089 | Verifica P.IVA simulata (e geocoding simulato, solo con `GEOCODING_DRIVER=simulated`) (vedi `docker/wiremock/mappings`) |
 | S3Mock | http://localhost:9090 | Storage file compatibile S3, in memoria |
 | Adminer *(profilo `tools`)* | http://localhost:8081 | Interfaccia web per MySQL |
 | stripe-cli *(profilo `stripe`)* | – | Inoltra i webhook della modalità test Stripe (serve `STRIPE_API_KEY`) |
@@ -79,5 +79,5 @@ docker compose exec php php artisan clock reset
 
 ## Dati simulati nei servizi esterni
 
-- **Geocoding:** indirizzi che **finiscono** con "Milano" o "Roma" restituiscono coordinate; "TIMEOUT" simula un timeout; altri non vengono trovati.
-- **Partita IVA:** `IT12345678901` è valida; `IT99999999999` simula servizio non disponibile; le altre non sono valide.
+- **Geocoding:** per impostazione usa **OpenStreetMap (Nominatim)**: funziona con qualsiasi indirizzo, città o paese d'Italia e richiede internet. Con `GEOCODING_DRIVER=simulated` in `apps/api/.env` usa WireMock (solo indirizzi che finiscono con "Milano" o "Roma"; "TIMEOUT" simula un timeout), utile offline.
+- **Partita IVA:** `IT` + 11 cifre che iniziano con **1–8** sono valide (es. `IT12345678901`, `IT22345678901`, `IT33345678901`); `IT99999999999` simula servizio non disponibile; quelle che iniziano con 0 o 9 non sono valide. Ogni P.IVA può essere usata da **un solo venditore**: per provare più venditori usane una diversa per ciascuno.

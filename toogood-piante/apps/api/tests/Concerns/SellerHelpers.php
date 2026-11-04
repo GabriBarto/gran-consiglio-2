@@ -16,6 +16,7 @@ trait SellerHelpers
     protected function fakeExternalServices(bool $geocodingDown = false): void
     {
         config([
+            'toogood.services.geocoding_driver' => 'simulated',
             'toogood.services.geocoding_url' => 'http://geo.test/geocode',
             'toogood.services.vies_url' => 'http://vies.test/check',
         ]);

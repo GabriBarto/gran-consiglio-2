@@ -23,7 +23,7 @@ class CheckServices extends Command
             'Email (Mailpit)' => fn () => $this->checkMail(),
             'Storage file (S3Mock)' => fn () => $this->checkStorage(),
             'Pagamenti (stripe-mock)' => fn () => $this->checkStripe(),
-            'Geocoding (WireMock)' => fn () => $this->checkGeocoding(),
+            'Geocoding' => fn () => $this->checkGeocoding(),
             'Verifica P.IVA (WireMock)' => fn () => $this->checkVies(),
         ];
 
@@ -94,12 +94,9 @@ class CheckServices extends Command
 
     private function checkGeocoding(): string
     {
-        $data = Http::get(config('toogood.services.geocoding_url'), ['address' => 'Via Roma 1, Milano'])->throw()->json();
-        if (! ($data['found'] ?? false)) {
-            throw new \RuntimeException('indirizzo di prova non trovato');
-        }
+        $found = app(\App\Services\Seller\Geocoder::class)->locate('Via Roma 1, Milano');
 
-        return "Milano → {$data['lat']}, {$data['lng']}";
+        return "{$found['city']} → {$found['lat']}, {$found['lng']} (".config('toogood.services.geocoding_driver').')';
     }
 
     private function checkVies(): string

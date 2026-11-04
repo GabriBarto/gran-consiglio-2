@@ -29,6 +29,9 @@ Ogni scelta: **cosa**, **perché**, **alternativa**, **dove**.
 
 ## 4. Geocoding all'inserimento, non alla ricerca
 
+> **Aggiornamento (giorno 5):** il servizio non è più solo simulato. Di default si usa **Nominatim (OpenStreetMap)**, limitato all'Italia, che accetta qualsiasi indirizzo, città o paese; chiede uno User-Agent che identifichi l'app e al massimo una richiesta al secondo (rispettato: si cerca solo quando l'indirizzo cambia). La versione simulata (WireMock, solo Milano e Roma) resta con `GEOCODING_DRIVER=simulated` e nei test, che così non dipendono da internet.
+
+
 - **Cosa:** l'indirizzo viene trasformato in latitudine, longitudine e città quando il venditore lo salva, e i valori restano nel database.
 - **Perché:** la ricerca per distanza (giorno 7) deve essere veloce e non può chiamare un servizio esterno per ogni negozio a ogni ricerca. Si paga il costo una volta.
 - **Indirizzo non trovato** → 422, il venditore lo corregge. **Servizio lento o non raggiungibile** → 503 `GEOCODING_UNAVAILABLE` con timeout di 5 secondi: l'utente può riprovare e la richiesta non resta appesa. Non si salva un negozio senza coordinate, perché non sarebbe trovabile.

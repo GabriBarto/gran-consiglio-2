@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import { api, bindSession } from './api';
-import { clearRefreshToken, loadRefreshToken, saveRefreshToken } from './storage';
+import { clearRefreshToken, loadDeviceToken, loadRefreshToken, saveDeviceToken, saveRefreshToken } from './storage';
 
 const AuthContext = createContext(null);
 export const useAuth = () => useContext(AuthContext);
@@ -58,11 +58,21 @@ export function AuthProvider({ children }) {
   const value = useMemo(() => ({
     user,
     booting,
-    // Passo 1: restituisce il challenge_id; il codice arriva per email.
-    startLogin: (email, password) => api.login(email, password),
-    // Passo 2: scambia il codice con i token ed entra.
+    // Passo 1. Su un dispositivo già verificato entra subito e restituisce null;
+    // altrimenti restituisce la risposta con il challenge_id (il codice arriva per email).
+    startLogin: async (email, password) => {
+      const res = await api.login(email, password, await loadDeviceToken(email), DEVICE);
+      if (res.requires_code === false) {
+        await storeTokens(res);
+        setUser(res.user);
+        return null;
+      }
+      return res;
+    },
+    // Passo 2: scambia il codice con i token ed entra; il dispositivo viene ricordato.
     finishLogin: async (challengeId, code) => {
       const data = await api.verifyLogin(challengeId, code, DEVICE);
+      if (data.device_token) await saveDeviceToken(data.user.email, data.device_token).catch(() => {});
       await storeTokens(data);
       setUser(data.user);
     },

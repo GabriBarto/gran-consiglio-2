@@ -13,7 +13,7 @@ const BY_CODE = {
   INVALID_CURRENT_PASSWORD: 'La password attuale non è corretta.',
   NETWORK_ERROR: 'Impossibile contattare il server. Controlla la connessione.',
   RATE_LIMITED: 'Troppe richieste: riprova tra un minuto.',
-  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Controlla via, numero e città (es. “Via Roma 1, Milano”).',
+  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Controlla via, numero e città (può essere un qualsiasi comune italiano).',
   GEOCODING_UNAVAILABLE: 'Non riusciamo a verificare l’indirizzo in questo momento. Riprova tra poco.',
   VAT_INVALID: 'La partita IVA non risulta valida.',
   PROFILE_LOCKED: 'I dati di un’attività approvata non si modificano da qui.',
@@ -34,7 +34,7 @@ const BY_FIELD = {
   code: 'Inserisci il codice di 6 cifre.',
   current_password: 'La password attuale non è corretta.',
   business_name: 'Inserisci la ragione sociale.',
-  vat_number: 'Partita IVA non valida (11 cifre) o già registrata.',
+  vat_number: 'Partita IVA non valida: servono IT e 11 cifre.',
   phone: 'Inserisci un numero di telefono valido.',
   address: 'Inserisci l’indirizzo dell’attività.',
   opens_at: 'Controlla l’orario di apertura (formato 08:30).',
@@ -48,6 +48,10 @@ export function errorMessage(err) {
   if (!err) return '';
   if (BY_CODE[err.code]) return BY_CODE[err.code];
   if (err.status === 422 && err.fields) {
+    // Il server risponde con la chiave di Laravel (validation.unique) quando un altro venditore ha già quella P.IVA
+    if (err.fields.vat_number?.some((m) => String(m).includes('unique'))) {
+      return 'Questa partita IVA è già registrata da un altro venditore.';
+    }
     const messages = Object.keys(err.fields).map((f) => BY_FIELD[f]).filter(Boolean);
     if (messages.length) return [...new Set(messages)].join('\n');
   }
