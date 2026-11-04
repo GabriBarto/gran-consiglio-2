@@ -7,7 +7,7 @@ Guida passo passo, dal PC spento alla prova completa dell'app. I comandi vanno l
 | Strumento | Perché | Controllo |
 |---|---|---|
 | **Docker Desktop** (acceso) | Fa girare API, database e simulatori | `docker --version` |
-| **Node 24** | Serve per l'app mobile | `node --version` |
+| **Node 24** | Serve per l'app mobile e per il pannello admin | `node --version` |
 | **Expo Go** sul telefono (Android o iOS), oppure un emulatore | Per aprire l'app | – |
 
 PHP e Composer **non** vanno installati: girano nei container.
@@ -152,34 +152,27 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
    - Orari: il ritiro deve stare dentro gli orari di apertura (es. aperto 08:00–19:00, ritiro 17:00–19:00)
 2. **Salva e continua**, poi **Allega un documento** (un PDF, JPG o PNG fino a 5 MB).
 3. Torna al negozio: lo stato è **In verifica**. Tocca **Collega il conto di pagamento** (con il simulatore Stripe il link è solo un esempio), poi **Ho finito: controlla**: compare "Collegato ✓".
-4. **Approva il venditore** (il pannello web arriva al giorno 5, per ora con comandi PowerShell, da incollare **nella stessa finestra**, un blocco alla volta). La password iniziale dell'admin è in `apps/api/.env.example` (`ADMIN_INITIAL_PASSWORD`).
-
-   a) Accesso: password, poi il codice che arriva in Mailpit (http://localhost:8025).
-   ```powershell
-   $api = "http://localhost:8080/api"
-   $json = @{ Accept = "application/json" }
-   $pw = Read-Host "Password admin"
-   $c = Invoke-RestMethod -Method Post -Uri "$api/auth/login" -Headers $json -ContentType "application/json" -Body (@{email="admin@toogood.test"; password=$pw} | ConvertTo-Json)
-   $code = Read-Host "Codice a 6 cifre (da Mailpit)"
-   $t = Invoke-RestMethod -Method Post -Uri "$api/auth/login/verify" -Headers $json -ContentType "application/json" -Body (@{challenge_id=$c.challenge_id; code=$code} | ConvertTo-Json)
-   $auth = @{ Accept = "application/json"; Authorization = "Bearer $($t.access_token)" }
-   $t.user
-   ```
-
-   b) **Solo la prima volta**, se `must_change_password` vale `True` (altrimenti le chiamate admin rispondono 403): cambia la password.
-   ```powershell
-   $cur = Read-Host "Password attuale (quella iniziale)"
-   $new = Read-Host "Nuova password (almeno 10 caratteri, lettere e numeri)"
-   Invoke-RestMethod -Method Post -Uri "$api/auth/password/change" -Headers $auth -ContentType "application/json" -Body (@{current_password=$cur; password=$new; password_confirmation=$new} | ConvertTo-Json) | Out-Null
-   ```
-
-   c) Elenco delle richieste e approvazione (sostituisci `1` con l'`id` del negozio):
-   ```powershell
-   (Invoke-RestMethod -Uri "$api/admin/sellers" -Headers $auth).data | Select-Object id, email, status, vat_check_status
-   Invoke-RestMethod -Method Post -Uri "$api/admin/sellers/1/approve" -Headers $auth
-   ```
-   Per rifiutare, con un motivo di almeno 5 caratteri: `Invoke-RestMethod -Method Post -Uri "$api/admin/sellers/1/reject" -Headers $auth -ContentType "application/json" -Body '{"note":"motivo"}'`. Il token dura 15 minuti: se scade, rifai il passo a).
+4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
+
+### Pannello admin web (giorno 5)
+
+Sito React/Vite per l'admin: coda delle verifiche dei venditori. Serve l'API già avviata.
+
+```bash
+cd apps/admin
+npm install      # solo la prima volta
+npm run dev
+```
+
+Apri http://localhost:5173 (la porta è fissa: l'API accetta richieste solo da lì).
+
+1. Accedi con l'email e la password dell'admin (`apps/api/.env.example`), poi inserisci il codice a 6 cifre che trovi in Mailpit.
+2. Al primo accesso il pannello chiede di cambiare la password: è voluto.
+3. Nella scheda **In attesa** scegli una richiesta: vedi dati, esito del controllo P.IVA, stato del conto di pagamento e documenti (si aprono in una nuova scheda).
+4. **Approva** oppure **Rifiuta…** con un motivo di almeno 5 caratteri. Il venditore riceve l'email (Mailpit) e vede il nuovo stato nell'app con **Aggiorna stato**.
+
+Se il pannello dice "Impossibile contattare il server", controlla che Docker sia acceso e che l'API risponda su http://localhost:8080.
 
 Dopo aver scaricato questa versione del codice, aggiorna il database:
 

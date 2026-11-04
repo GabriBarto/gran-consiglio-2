@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-03 – **giorno 4 completato e provato sull'API; schermate mobili non ancora provate su telefono**. Giorni 1–3 in `main`; il giorno 4 è sul branch `giorno-4-venditore` (non committato, non pubblicato). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello admin web). Giorni 1–4 in `main`; il giorno 5 è sul branch locale `giorno-5-admin` (**non pubblicato**). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -9,6 +9,7 @@ Ultimo aggiornamento: 2026-11-03 – **giorno 4 completato e provato sull'API; s
   - [Giorno 2 – autenticazione](docs/scelte/giorno-2-autenticazione.md)
   - [Giorno 3 – app mobile](docs/scelte/giorno-3-app-mobile.md)
   - [Giorno 4 – onboarding venditore](docs/scelte/giorno-4-onboarding-venditore.md)
+  - [Giorno 5 – pannello admin web](docs/scelte/giorno-5-pannello-admin.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
 
@@ -41,7 +42,16 @@ Ultimo aggiornamento: 2026-11-03 – **giorno 4 completato e provato sull'API; s
 - **Test: 98 su 98 passano** (37 nuovi). Prova end-to-end sullo stack vivo (Mailpit, WireMock, S3Mock, stripe-mock) fino a `can_publish = true`.
 - App mobile: il bundle Android compila; `expo-doctor` 19/20 (il ventesimo segnala solo una patch più recente di `expo`). **Le nuove schermate non sono state provate su telefono o emulatore: farlo prima di andare avanti.**
 - Corretto dopo la prima prova su telefono: l'invio dei documenti usava un formato non più supportato dal fetch di Expo SDK 58 (nuova dipendenza `expo-file-system`: rifare `npm install`); nginx ora non dà più 502 quando `php` si riavvia; il limite di upload di PHP è 6 MB. **L'invio del documento dall'app va riprovato sul telefono.**
-- Il pannello admin web e la schermata d'approvazione arrivano al giorno 5: per ora si approva con le chiamate API (vedi sotto).
+
+**Giorno 5 – pannello admin web** (`apps/admin`, React 19 + Vite 8, JavaScript; guida: [docs/AVVIO.md](docs/AVVIO.md)):
+- Accesso admin con 2FA via email e cambio password obbligatorio al primo accesso; i ruoli diversi da ADMIN non entrano (e il loro token viene subito chiuso).
+- Coda delle verifiche con schede In attesa / Approvate / Rifiutate / Sospese; dettaglio con dati, esito P.IVA, conto di pagamento e documenti (scaricati dall'API con il token e aperti in una nuova scheda).
+- Approva e Rifiuta (motivo di 5–1000 caratteri, inviato per email); errori in italiano; tema chiaro/scuro.
+- API: nuovo `config/cors.php` (origini ammesse da `CORS_ALLOWED_ORIGINS`, di default `localhost:5173`). Nessun altro cambiamento al backend.
+- La schermata di stato del venditore in app era già stata fatta al giorno 4.
+- Verificato: build Vite ok; prova nel browser contro l'API viva (accesso con codice → cambio password → coda → dettaglio → rifiuto con email in Mailpit); **test backend 98 su 98**. **Approva non provato nel browser** (usa la stessa API del rifiuto, già coperta dai test): provarlo a mano.
+- Nessun test automatico del pannello (previsti più avanti, Playwright). Le schede non si aggiornano da sole: c'è il pulsante Aggiorna.
+- Per la prova ho dovuto eseguire `php artisan migrate` (mancavano le migrazioni del giorno 4 nel database locale): dopo ogni pull, rifarlo.
 
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
@@ -54,16 +64,8 @@ Ultimo aggiornamento: 2026-11-03 – **giorno 4 completato e provato sull'API; s
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 5 – pannello admin web e stato in app
-Pannello admin web (React/Vite) con la coda delle verifiche; approvo un venditore dal web e lui lo vede in app. L'API per farlo esiste già (`/api/admin/sellers`). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Per provare l'app da un telefono vero, `APP_URL` in `apps/api/.env` deve usare l'IP del PC.
-
-### Come approvare un venditore, in attesa del pannello (giorno 5)
-Serve il token dell'admin (accesso con codice da Mailpit). Con quel token:
-- `GET /api/admin/sellers` elenca le richieste;
-- `POST /api/admin/sellers/{id}/approve` approva;
-- `POST /api/admin/sellers/{id}/reject` con `{"note": "motivo"}` rifiuta.
-
-Il venditore vede il nuovo stato nell'app toccando "Aggiorna stato" e riceve l'email in Mailpit.
+## Prossimo: giorno 6 – box
+Creazione di box per oggi, prezzo calcolato dal sistema (sconto 60–70%, tariffa 1,50 €), guadagno mostrato anche se negativo, modifica, eliminazione e stock a contatore; il venditore pubblica una box dall'app (serve `can_publish`). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene provare a mano l'**approvazione** dal pannello con un venditore vero. Per provare l'app da un telefono vero, `APP_URL` in `apps/api/.env` deve usare l'IP del PC.
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -75,8 +77,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1 e 2 sono in `main` (PR #7), il giorno 3 pure (PR #8, dal branch `viggio`). Il giorno 4 è sul branch locale `giorno-4-venditore`, creato da `rebs` (che contiene anche i documenti `docs/AVVIO.md` e `docs/scelte`, pubblicati ma senza PR): **nulla del giorno 4 è stato committato né pubblicato**.
-- Su questo PC non c'è Node: per i comandi `npm`/`npx` si usa un container (`docker run --rm -v <cartella>:/app -w /app node:24-alpine ...`).
+- Git: i giorni 1–4 sono in `main` (PR #7, #8, #9, #10). Il giorno 5 è sul branch locale `giorno-5-admin`, creato da `main`: **non è stato pubblicato** (nessun push, nessuna PR) su richiesta.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
