@@ -80,4 +80,4 @@ docker compose exec php php artisan clock reset
 ## Dati simulati nei servizi esterni
 
 - **Geocoding:** per impostazione usa **OpenStreetMap (Nominatim)**: funziona con qualsiasi indirizzo, città o paese d'Italia e richiede internet. Con `GEOCODING_DRIVER=simulated` in `apps/api/.env` usa WireMock (solo indirizzi che finiscono con "Milano" o "Roma"; "TIMEOUT" simula un timeout), utile offline.
-- **Partita IVA:** `IT12345678901` è valida; `IT99999999999` simula servizio non disponibile; le altre non sono valide.
+- **Partita IVA:** `IT` + 11 cifre che iniziano con **1–8** sono valide (es. `IT12345678901`, `IT22345678901`, `IT33345678901`); `IT99999999999` simula servizio non disponibile; quelle che iniziano con 0 o 9 non sono valide. Ogni P.IVA può essere usata da **un solo venditore**: per provare più venditori usane una diversa per ciascuno.
