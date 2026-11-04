@@ -148,7 +148,7 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 
 1. Tocca **Inserisci i dati dell'attività** e compila (valori che il simulatore accetta):
    - Partita IVA: `IT` + 11 cifre che iniziano con 1–8, per esempio `IT12345678901`; **ogni venditore ne vuole una diversa** (`IT22345678901`, `IT33345678901`…), perché sono univoche. Quelle che iniziano con 0 o 9 danno "non valida"; `IT99999999999` simula il servizio giù
-   - Indirizzo: **qualsiasi indirizzo, città o paese d'Italia**, per esempio `Via Garibaldi 12, Bologna` oppure solo `Pesaro` (il controllo usa OpenStreetMap, quindi serve internet)
+   - Indirizzo: **qualsiasi indirizzo, città o paese d'Italia**, scritto **via, numero, città** con la virgola prima della città, per esempio `Via Rizzoli 5, Bologna` o `Via Rossini 10, Pesaro`; oppure solo il nome di una città, come `Pesaro`. Il controllo usa OpenStreetMap (serve internet) e verifica che l'indirizzo esista **proprio in quella città**: un civico che non c'è lì viene rifiutato, indicando dove si trova quello più simile
    - Orari: il ritiro deve stare dentro gli orari di apertura (es. aperto 08:00–19:00, ritiro 17:00–19:00)
 2. **Salva e continua**, poi **Allega un documento** (un PDF, JPG o PNG fino a 5 MB).
 3. Torna al negozio: lo stato è **In verifica**. Tocca **Collega il conto di pagamento** (con il simulatore Stripe il link è solo un esempio), poi **Ho finito: controlla**: compare "Collegato ✓".

@@ -66,9 +66,9 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 6 completato e provato sull'API; s
 - Modifica: valore e sconto bloccati dopo la prima vendita; la quantità può solo scendere, mai sotto il venduto; eliminazione solo senza vendite. Ogni box conserva la tariffa del momento della creazione.
 - App: nella home del venditore la sezione **Box di oggi** (elenco con prezzo, disponibili e guadagno) e il modulo **Nuova box / Modifica box** con riepilogo del prezzo in tempo reale.
 - Nuovo: `contracts/price-cases.json` (11 casi della formula) eseguito da PHP e da `npm test` nell'app; `docker-compose.yml` monta `contracts/` nei container PHP (**dopo il pull rifare `docker compose up -d`**).
-- Test: **140 su 140** backend (31 nuovi) e 14 su 14 dell'app (`cd apps/mobile && npm test`). Provato dal vivo sull'API: opzioni, creazione, elenco. Bundle Android ok. **Le schermate non sono state provate su telefono.**
+- Test: **148 su 148** backend (31 + 8 nuovi sul geocoding) e 14 su 14 dell'app (`cd apps/mobile && npm test`). Provato dal vivo sull'API: opzioni, creazione, elenco. Bundle Android ok. **Le schermate non sono state provate su telefono.**
 - Limiti noti: il prezzo può arrivare a 0 con listini minuscoli (nessun minimo per RB-04) e Stripe non accetta meno di 0,50 €: da gestire nel pagamento (giorno 8). Lo stock "venduto" si simula soltanto: il decremento automatico arriva con il carrello. La pubblicazione non controlla se la fascia di ritiro di oggi è finita.
-- Nota sul geocoding reale: l'indirizzo `Via Garibaldi 12, Bologna` è stato risolto da OpenStreetMap in un comune della provincia (Sasso Marconi): usa il primo risultato e non confronta la città scritta con quella trovata. Da rifinire (ricerca strutturata o conferma della città) prima del giorno 7, quando la ricerca per distanza si baserà su queste coordinate.
+- **Geocoding corretto (stesso giorno):** prima OpenStreetMap restituiva il miglior civico anche in un altro comune (`Via Garibaldi 12, Bologna` → Sasso Marconi) e l'app lo accettava. Ora si chiedono 8 risultati e si sceglie quello il cui comune (o frazione/quartiere) **coincide per nome** con la città scritta dopo l'ultima virgola (ignorando accenti, maiuscole, articoli, CAP e sigla di provincia; la provincia non conta). Se non c'è, l'errore `ADDRESS_CITY_MISMATCH` dice dove si trova l'indirizzo più simile e nulla viene salvato. Con la sola città (`Pesaro`) non si confronta. Regola per chi inserisce un indirizzo: **via, numero, città** con la virgola; se OpenStreetMap non conosce quel civico nella città, va usato un altro indirizzo. Esempi che funzionano: `Via Rizzoli 5, Bologna`, `Via Rossini 10, Pesaro`, `Via Torino 10, Milano`.
 
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
@@ -82,7 +82,7 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 6 completato e provato sull'API; s
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
 ## Prossimo: giorno 7 – ricerca per distanza
-Ricerca per distanza, città e nome (a lista, ordinata per distanza), scheda negozio con box e recensioni, ritorno alla box dopo la registrazione; è il Traguardo 1 (un cliente trova e vede le box). Servono: la schermata cliente nell'app (oggi un segnaposto), l'endpoint di ricerca con la formula della distanza sulle coordinate dei venditori, e box d'esempio. Prima conviene **provare a mano le box sul telefono** e sistemare l'imprecisione del geocoding (vedi sopra). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ricerca per distanza, città e nome (a lista, ordinata per distanza), scheda negozio con box e recensioni, ritorno alla box dopo la registrazione; è il Traguardo 1 (un cliente trova e vede le box). Servono: la schermata cliente nell'app (oggi un segnaposto), l'endpoint di ricerca con la formula della distanza sulle coordinate dei venditori, e box d'esempio. Prima conviene **provare a mano le box sul telefono**. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:

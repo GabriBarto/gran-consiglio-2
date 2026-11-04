@@ -50,6 +50,7 @@ PDF, JPG o PNG, fino a 5 MB, massimo 5 per venditore. Il tipo è letto dal **con
 |---|---|---|
 | `VAT_INVALID` | 422 | La P.IVA non risulta valida. |
 | `ADDRESS_NOT_FOUND` | 422 | Il geocoding non trova l'indirizzo. |
+| `ADDRESS_CITY_MISMATCH` | 422 | L'indirizzo esiste ma non nella città scritta; il messaggio indica dove si trova il più simile. Nulla viene salvato. |
 | `GEOCODING_UNAVAILABLE` | 503 | Geocoding in timeout o non raggiungibile: nulla viene salvato, si può riprovare. |
 | `PROFILE_REQUIRED` | 409 | Documento o Stripe richiesti prima di compilare i dati. |
 | `PROFILE_LOCKED` | 403 | Profilo approvato o sospeso: non modificabile. |
@@ -79,6 +80,6 @@ Si decide solo su richieste `PENDING`; altrimenti 409 `INVALID_STATE`.
 
 ## Dati finti in sviluppo
 
-- **Geocoding:** di default è **reale** (OpenStreetMap/Nominatim, limitato all'Italia): vale qualsiasi indirizzo, città o paese, ad esempio `Via Rossini 10, Pesaro` o solo `Corniglio`. Serve internet; senza, risponde 503 `GEOCODING_UNAVAILABLE`. Con `GEOCODING_DRIVER=simulated` si usa WireMock: funzionano solo indirizzi che finiscono con "Milano" o "Roma" e `TIMEOUT` simula un servizio lento.
+- **Geocoding:** di default è **reale** (OpenStreetMap/Nominatim, limitato all'Italia): vale qualsiasi indirizzo, città o paese, ad esempio `Via Rossini 10, Pesaro` o solo `Corniglio`. L'indirizzo va scritto **via, numero, città** con la virgola: la città è l'ultimo pezzo (CAP, sigla di provincia e "Italia" si ignorano) e il risultato deve trovarsi **in quel comune** (o in una sua frazione/quartiere), altrimenti 422 `ADDRESS_CITY_MISMATCH`. Con la sola città non c'è confronto. Serve internet; senza, risponde 503 `GEOCODING_UNAVAILABLE`. Con `GEOCODING_DRIVER=simulated` si usa WireMock: funzionano solo indirizzi che finiscono con "Milano" o "Roma" e `TIMEOUT` simula un servizio lento.
 - **P.IVA:** `IT` + 11 cifre che iniziano con 1–8 sono valide (es. `IT12345678901`, `IT22345678901`); `IT99999999999` servizio non disponibile; quelle che iniziano con 0 o 9 non valide. La P.IVA è univoca: un secondo venditore con la stessa riceve 422 sul campo `vat_number`.
 - **Stripe:** con `stripe-mock` l'account risulta sempre con i trasferimenti attivi, quindi il collegamento si completa subito. Il link di onboarding restituito è un indirizzo di esempio di Stripe, non una vera procedura: per provare quella vera servono le chiavi di test e `STRIPE_API_BASE` vuoto.

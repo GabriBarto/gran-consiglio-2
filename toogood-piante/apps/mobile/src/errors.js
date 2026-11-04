@@ -13,7 +13,7 @@ const BY_CODE = {
   INVALID_CURRENT_PASSWORD: 'La password attuale non è corretta.',
   NETWORK_ERROR: 'Impossibile contattare il server. Controlla la connessione.',
   RATE_LIMITED: 'Troppe richieste: riprova tra un minuto.',
-  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Controlla via, numero e città (può essere un qualsiasi comune italiano).',
+  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Scrivi via, numero e città separati da virgole (può essere un qualsiasi comune italiano).',
   GEOCODING_UNAVAILABLE: 'Non riusciamo a verificare l’indirizzo in questo momento. Riprova tra poco.',
   VAT_INVALID: 'La partita IVA non risulta valida.',
   PROFILE_LOCKED: 'I dati di un’attività approvata non si modificano da qui.',
@@ -60,6 +60,8 @@ const BY_FIELD = {
 
 export function errorMessage(err) {
   if (!err) return '';
+  // Il messaggio del server dice quale città ha trovato al posto di quella scritta: è già in italiano
+  if (err.code === 'ADDRESS_CITY_MISMATCH' && err.message) return err.message;
   if (BY_CODE[err.code]) return BY_CODE[err.code];
   if (err.status === 422 && err.fields) {
     // Il server risponde con la chiave di Laravel (validation.unique) quando un altro venditore ha già quella P.IVA

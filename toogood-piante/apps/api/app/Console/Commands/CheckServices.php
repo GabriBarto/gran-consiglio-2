@@ -94,7 +94,9 @@ class CheckServices extends Command
 
     private function checkGeocoding(): string
     {
-        $found = app(\App\Services\Seller\Geocoder::class)->locate('Via Roma 1, Milano');
+        // Il simulatore conosce solo Milano e Roma; OpenStreetMap un indirizzo vero
+        $address = config('toogood.services.geocoding_driver') === 'simulated' ? 'Via Roma 1, Milano' : 'Via Rizzoli 5, Bologna';
+        $found = app(\App\Services\Seller\Geocoder::class)->locate($address);
 
         return "{$found['city']} → {$found['lat']}, {$found['lng']} (".config('toogood.services.geocoding_driver').')';
     }
