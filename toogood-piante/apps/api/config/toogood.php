@@ -27,6 +27,10 @@ return [
     ],
 
     'services' => [
+        // "nominatim" (OpenStreetMap, indirizzi reali) oppure "simulated" (WireMock, solo test e prove offline)
+        'geocoding_driver' => env('GEOCODING_DRIVER', 'nominatim'),
+        'nominatim_url' => env('NOMINATIM_URL', 'https://nominatim.openstreetmap.org'),
+        'geocoding_user_agent' => env('GEOCODING_USER_AGENT', 'TooGoodPiante/0.1 (progetto di studio)'),
         'geocoding_url' => env('GEOCODING_URL'),
         'vies_url' => env('VIES_URL'),
         'mailpit_api_url' => env('MAILPIT_API_URL'),

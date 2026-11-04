@@ -79,6 +79,6 @@ Si decide solo su richieste `PENDING`; altrimenti 409 `INVALID_STATE`.
 
 ## Dati finti in sviluppo
 
-- **Geocoding:** indirizzi che finiscono con "Milano" o "Roma" funzionano; `TIMEOUT` nell'indirizzo simula un servizio lento; altri → non trovato.
+- **Geocoding:** di default è **reale** (OpenStreetMap/Nominatim, limitato all'Italia): vale qualsiasi indirizzo, città o paese, ad esempio `Via Rossini 10, Pesaro` o solo `Corniglio`. Serve internet; senza, risponde 503 `GEOCODING_UNAVAILABLE`. Con `GEOCODING_DRIVER=simulated` si usa WireMock: funzionano solo indirizzi che finiscono con "Milano" o "Roma" e `TIMEOUT` simula un servizio lento.
 - **P.IVA:** `IT12345678901` valida; `IT99999999999` servizio non disponibile; tutte le altre non valide.
 - **Stripe:** con `stripe-mock` l'account risulta sempre con i trasferimenti attivi, quindi il collegamento si completa subito. Il link di onboarding restituito è un indirizzo di esempio di Stripe, non una vera procedura: per provare quella vera servono le chiavi di test e `STRIPE_API_BASE` vuoto.

@@ -50,7 +50,7 @@ Si apre con Expo Go sul telefono (stessa rete del PC) o con un emulatore. L'indi
 | Mailpit | http://localhost:8025 | Tutte le email inviate dall'app (2FA, conferme d'ordine) |
 | MySQL | localhost:3307 | utente `toogood` / password `secret` / database `toogood` (solo sviluppo) |
 | stripe-mock | http://localhost:12111 | API Stripe simulata (senza stato né webhook) |
-| WireMock | http://localhost:8089 | Geocoding e verifica P.IVA simulati (vedi `docker/wiremock/mappings`) |
+| WireMock | http://localhost:8089 | Verifica P.IVA simulata (e geocoding simulato, solo con `GEOCODING_DRIVER=simulated`) (vedi `docker/wiremock/mappings`) |
 | S3Mock | http://localhost:9090 | Storage file compatibile S3, in memoria |
 | Adminer *(profilo `tools`)* | http://localhost:8081 | Interfaccia web per MySQL |
 | stripe-cli *(profilo `stripe`)* | – | Inoltra i webhook della modalità test Stripe (serve `STRIPE_API_KEY`) |
@@ -79,5 +79,5 @@ docker compose exec php php artisan clock reset
 
 ## Dati simulati nei servizi esterni
 
-- **Geocoding:** indirizzi che **finiscono** con "Milano" o "Roma" restituiscono coordinate; "TIMEOUT" simula un timeout; altri non vengono trovati.
+- **Geocoding:** per impostazione usa **OpenStreetMap (Nominatim)**: funziona con qualsiasi indirizzo, città o paese d'Italia e richiede internet. Con `GEOCODING_DRIVER=simulated` in `apps/api/.env` usa WireMock (solo indirizzi che finiscono con "Milano" o "Roma"; "TIMEOUT" simula un timeout), utile offline.
 - **Partita IVA:** `IT12345678901` è valida; `IT99999999999` simula servizio non disponibile; le altre non sono valide.

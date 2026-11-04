@@ -13,6 +13,7 @@ export function LoginScreen({ navigation }) {
 
   const submit = () => run(async () => {
     const res = await startLogin(email.trim(), password);
+    if (!res) return; // dispositivo già verificato: l'accesso è completo e la schermata cambia da sola
     navigation.navigate('LoginCode', { challengeId: res.challenge_id, email: email.trim() });
   });
 

@@ -13,7 +13,7 @@ const BY_CODE = {
   INVALID_CURRENT_PASSWORD: 'La password attuale non è corretta.',
   NETWORK_ERROR: 'Impossibile contattare il server. Controlla la connessione.',
   RATE_LIMITED: 'Troppe richieste: riprova tra un minuto.',
-  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Controlla via, numero e città (es. “Via Roma 1, Milano”).',
+  ADDRESS_NOT_FOUND: 'Indirizzo non trovato. Controlla via, numero e città (può essere un qualsiasi comune italiano).',
   GEOCODING_UNAVAILABLE: 'Non riusciamo a verificare l’indirizzo in questo momento. Riprova tra poco.',
   VAT_INVALID: 'La partita IVA non risulta valida.',
   PROFILE_LOCKED: 'I dati di un’attività approvata non si modificano da qui.',

@@ -59,9 +59,10 @@ export async function request(method, path, body) {
 export const api = {
   register: (data) => publicRequest('POST', '/auth/register', data),
   resendVerification: (email) => publicRequest('POST', '/auth/verify-email/resend', { email }),
-  login: (email, password) => publicRequest('POST', '/auth/login', { email, password }),
+  login: (email, password, device_token, device) =>
+    publicRequest('POST', '/auth/login', { email, password, device_token: device_token ?? undefined, device }),
   verifyLogin: (challenge_id, code, device) =>
-    publicRequest('POST', '/auth/login/verify', { challenge_id, code, device }),
+    publicRequest('POST', '/auth/login/verify', { challenge_id, code, device, remember_device: true }),
   refresh: (refresh_token) => publicRequest('POST', '/auth/refresh', { refresh_token }),
   forgotPassword: (email) => publicRequest('POST', '/auth/password/forgot', { email }),
   resetPassword: (data) => publicRequest('POST', '/auth/password/reset', data),

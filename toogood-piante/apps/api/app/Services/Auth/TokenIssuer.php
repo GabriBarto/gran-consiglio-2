@@ -90,9 +90,14 @@ final class TokenIssuer
             ->update(['revoked_at' => now()]);
     }
 
-    /** Chiude tutte le sessioni dell'utente, tranne (se indicato) l'access token in uso. */
+    /**
+     * Chiude tutte le sessioni dell'utente, tranne (se indicato) l'access token in uso.
+     * Annulla anche i dispositivi fidati: dopo un cambio password o un sospetto furto il codice torna obbligatorio.
+     */
     public function revokeAll(User $user, ?int $exceptAccessTokenId = null): void
     {
+        app(TrustedDeviceService::class)->revokeAll($user);
+
         RefreshToken::where('user_id', $user->id)->whereNull('revoked_at')->update(['revoked_at' => now()]);
 
         $user->tokens()

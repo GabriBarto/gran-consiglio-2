@@ -203,7 +203,7 @@ export function SellerProfileScreen({ navigation }) {
       <Field label="Ragione sociale" value={form.business_name} onChangeText={set('business_name')} autoCapitalize="words" editable={!locked} />
       <Field label="Partita IVA" value={form.vat_number} onChangeText={set('vat_number')} placeholder="IT12345678901" autoCapitalize="characters" editable={!locked} />
       <Field label="Telefono" value={form.phone} onChangeText={set('phone')} keyboardType="phone-pad" editable={!locked} />
-      <Field label="Indirizzo (via, numero, città)" value={form.address} onChangeText={set('address')} placeholder="Via Roma 1, Milano" autoCapitalize="words" editable={!locked} />
+      <Field label="Indirizzo (via, numero, città)" value={form.address} onChangeText={set('address')} placeholder="Via Garibaldi 12, Bologna" autoCapitalize="words" editable={!locked} />
       <Hint>Orari in formato 24 ore, per esempio 08:30.</Hint>
       <View style={{ flexDirection: 'row', gap: 12 }}>
         <View style={{ flex: 1 }}><Field label="Apertura" value={form.opens_at} onChangeText={set('opens_at')} keyboardType="numbers-and-punctuation" maxLength={5} editable={!locked} /></View>
