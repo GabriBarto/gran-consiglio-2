@@ -155,6 +155,18 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
 
+### Prova la ricerca dei negozi (giorno 7)
+
+Serve almeno un negozio **approvato, con il conto collegato e una box di oggi** (vedi la prova delle box qui sotto). L'app ora si apre sull'elenco dei negozi, anche senza accesso.
+
+1. All'avvio l'app chiede il **permesso di posizione**: con "Consenti" i negozi sono ordinati per distanza; con "Non consentire" si cerca solo per città o nome. Sull'emulatore la posizione potrebbe non esserci: si imposta dalle opzioni dell'emulatore, o si cerca per città.
+2. Prova la ricerca: **nome** (`vivaio`), **città** (`bologna`, anche senza accenti o maiuscole) e l'interruttore **"Mostra anche i negozi senza box oggi"**.
+3. Tocca un negozio: **scheda** con orari, fascia di ritiro di oggi, orario limite d'ordine, recensioni e box con prezzo e "risparmi almeno X €". Le box esaurite compaiono in fondo, segnate come tali.
+4. **Da visitatore** (senza accesso) tocca **Accedi per acquistare** su una box: l'app ricorda quella box e apre l'accesso. Registrati come **cliente**, conferma l'email da Mailpit, accedi con il codice: l'app ti riporta alla **scheda del negozio con quella box evidenziata** ("Bentornato!…"). Se nel frattempo la box è esaurita o l'orario limite è passato, vedi un messaggio rosso.
+5. **Da cliente** vedi le stesse schede; il pulsante di acquisto arriva col carrello (giorno 8).
+
+Per controllare dal PC (senza token): `http://localhost:8080/api/shops?lat=44.4938&lng=11.3426` (vedi [API-negozi.md](API-negozi.md)). Dopo il pull serve `cd apps/mobile && npm install` (nuova libreria della posizione).
+
 ### Prova le box (giorno 6)
 
 Serve un venditore **approvato dall'admin** e con il **conto di pagamento collegato** (nell'app: "Collega il conto di pagamento", poi "Ho finito: controlla"). Allora nella home del venditore compare **Box di oggi**.

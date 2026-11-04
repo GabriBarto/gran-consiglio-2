@@ -35,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('refresh', fn (Request $request) => Limit::perMinute(30)->by($request->ip()));
         RateLimiter::for('password-forgot', fn (Request $request) => Limit::perHour(5)->by($byEmailAndIp($request)));
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by($byEmailAndIp($request)));
+        RateLimiter::for('shops', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
         RateLimiter::for('password-change', fn (Request $request) => Limit::perMinute(5)->by((string) $request->user()?->id));
     }
 }

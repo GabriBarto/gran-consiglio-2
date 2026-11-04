@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
-import { eurosToCents, formatEuro, quote } from '../src/pricing.js';
+import { eurosToCents, formatDistance, formatEuro, quote } from '../src/pricing.js';
 
 const { cases } = JSON.parse(readFileSync(new URL('../../../contracts/price-cases.json', import.meta.url), 'utf8'));
 
@@ -32,4 +32,16 @@ test('formatEuro mostra virgola e segno meno anche per i guadagni negativi', () 
   assert.equal(formatEuro(5), '0,05 €');
   assert.equal(formatEuro(-60), '−0,60 €');
   assert.equal(formatEuro(0), '0,00 €');
+});
+
+test('formatDistance: metri sotto il chilometro, km con virgola fino a 10, poi interi', () => {
+  assert.equal(formatDistance(null), '');
+  assert.equal(formatDistance(4), '10 m');
+  assert.equal(formatDistance(347), '350 m');
+  assert.equal(formatDistance(999), '1000 m');
+  assert.equal(formatDistance(1000), '1,0 km');
+  assert.equal(formatDistance(1234), '1,2 km');
+  assert.equal(formatDistance(9949), '9,9 km');
+  assert.equal(formatDistance(14400), '14 km');
+  assert.equal(formatDistance(141027), '141 km');
 });

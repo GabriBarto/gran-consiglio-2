@@ -21,7 +21,13 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "TooGood Piante usa la tua posizione per mostrarti i negozi più vicini."
+        }
+      ]
     ],
     "scheme": "toogood"
   }

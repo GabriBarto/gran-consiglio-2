@@ -56,6 +56,14 @@ export async function request(method, path, body) {
   }
 }
 
+// ?a=1&b=2 senza i valori vuoti (URLSearchParams in React Native è incompleto: si costruisce a mano)
+const query = (params = {}) => {
+  const pairs = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null && v !== '')
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`);
+  return pairs.length ? `?${pairs.join('&')}` : '';
+};
+
 export const api = {
   register: (data) => publicRequest('POST', '/auth/register', data),
   resendVerification: (email) => publicRequest('POST', '/auth/verify-email/resend', { email }),
@@ -85,6 +93,10 @@ export const api = {
   resubmitSeller: () => request('POST', '/seller/resubmit'),
   stripeOnboardingUrl: () => request('POST', '/seller/stripe/onboarding'),
   stripeSync: () => request('POST', '/seller/stripe/sync'),
+
+  // Ricerca e scheda dei negozi (pubbliche: funzionano anche senza accesso)
+  shops: (params) => publicRequest('GET', `/shops${query(params)}`),
+  shop: (id, position) => publicRequest('GET', `/shops/${id}${query(position)}`),
 
   // Box del giorno
   boxOptions: () => request('GET', '/seller/box-options'),

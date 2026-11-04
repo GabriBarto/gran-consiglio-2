@@ -7,6 +7,7 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TokenController;
 use App\Http\Controllers\MeController;
+use App\Http\Controllers\ShopController;
 use App\Http\Controllers\Seller\BoxController;
 use App\Http\Controllers\Seller\DocumentController;
 use App\Http\Controllers\Seller\ProfileController;
@@ -33,6 +34,12 @@ Route::prefix('auth')->group(function () {
         Route::post('logout', [TokenController::class, 'logout']);
         Route::post('password/change', [PasswordController::class, 'change'])->middleware('throttle:password-change');
     });
+});
+
+// Ricerca e scheda dei negozi: pubbliche, ci arriva anche chi non ha ancora un account (giorno 7)
+Route::middleware('throttle:shops')->group(function () {
+    Route::get('shops', [ShopController::class, 'index']);
+    Route::get('shops/{seller}', [ShopController::class, 'show'])->whereNumber('seller');
 });
 
 // Consentito anche con password da cambiare: l'app deve sapere che va mostrata la schermata di cambio.

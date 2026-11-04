@@ -19,3 +19,11 @@ export function formatEuro(cents) {
   const abs = Math.abs(cents);
   return `${sign}${Math.floor(abs / 100)},${String(abs % 100).padStart(2, '0')} €`;
 }
+
+// Distanza leggibile: 350 m, 1,2 km, 14 km (a 10 m di precisione sotto il chilometro)
+export function formatDistance(meters) {
+  if (meters == null) return '';
+  if (meters < 1000) return `${Math.max(10, Math.round(meters / 10) * 10)} m`;
+  const km = meters / 1000;
+  return `${km < 10 ? km.toFixed(1).replace('.', ',') : Math.round(km)} km`;
+}
