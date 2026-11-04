@@ -7,7 +7,9 @@ use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TokenController;
 use App\Http\Controllers\MeController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShopController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Seller\BoxController;
 use App\Http\Controllers\Seller\DocumentController;
 use App\Http\Controllers\Seller\ProfileController;
@@ -42,6 +44,9 @@ Route::middleware('throttle:shops')->group(function () {
     Route::get('shops/{seller}', [ShopController::class, 'show'])->whereNumber('seller');
 });
 
+// Webhook di Stripe: lo chiama Stripe, non un utente. Protetto dalla verifica della firma (giorno 8)
+Route::post('webhooks/stripe', StripeWebhookController::class);
+
 // Consentito anche con password da cambiare: l'app deve sapere che va mostrata la schermata di cambio.
 Route::get('me', MeController::class)->middleware(['auth:sanctum', 'active']);
 
@@ -64,6 +69,13 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::get('boxes/{box}', [BoxController::class, 'show'])->whereNumber('box');
         Route::put('boxes/{box}', [BoxController::class, 'update'])->whereNumber('box');
         Route::delete('boxes/{box}', [BoxController::class, 'destroy'])->whereNumber('box');
+    });
+
+    // Ordini del cliente: checkout con stock riservato e pagamento (giorno 8)
+    Route::prefix('orders')->middleware('role:CUSTOMER')->group(function () {
+        Route::post('/', [OrderController::class, 'store'])->middleware('throttle:checkout');
+        Route::get('{order}', [OrderController::class, 'show'])->whereNumber('order');
+        Route::post('{order}/simulate-payment', [OrderController::class, 'simulatePayment'])->whereNumber('order');
     });
 
     // Verifica delle attività da parte dell'admin

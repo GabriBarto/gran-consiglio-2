@@ -24,6 +24,16 @@ return [
         // In sviluppo e nei test punta a stripe-mock; vuoto = API reali di Stripe (modalità test)
         'api_base' => env('STRIPE_API_BASE'),
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET', 'whsec_test'),
+        // Chiave pubblica per l'app (Stripe vero); con stripe-mock resta vuota
+        'publishable_key' => env('STRIPE_PUBLISHABLE_KEY'),
+    ],
+
+    'payments' => [
+        'currency' => 'eur',
+        // Stripe non accetta pagamenti sotto i 0,50 €
+        'min_amount_cents' => 50,
+        // Pagamento di prova senza carta (solo sviluppo): attivo di default con stripe-mock, mai con le API vere di Stripe
+        'simulated' => (bool) env('PAYMENTS_SIMULATED', ! empty(env('STRIPE_API_BASE'))),
     ],
 
     'services' => [

@@ -37,7 +37,7 @@ Parametri come tariffa, sconto, ore limite d'ordine e ritardo del payout nell'MV
 
 ## 2. Calendario di 14 giorni
 
-**Avanzamento:** giorni 1–7 completati (Traguardo 1 raggiunto: un cliente trova e vede le box). Prossimo: giorno 8 (carrello e pagamento). Stato dettagliato in [toogood-piante/STATO.md](toogood-piante/STATO.md).
+**Avanzamento:** giorni 1–8 completati (il giorno 8 è solo lato server: ordini, stock riservato, pagamento e webhook; le schermate sono il giorno 9). Prossimo: giorno 9 (carrello, checkout e storico nell'app). Stato dettagliato in [toogood-piante/STATO.md](toogood-piante/STATO.md).
 
 Ipotesi: lavoro ogni giorno; tu provi l'app sul telefono a fine giornata. Se un giorno scivola, si taglia dal fondo della lista "se avanza tempo" (vedi sotto), mai dal percorso principale.
 
