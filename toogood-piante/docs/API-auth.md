@@ -12,7 +12,7 @@ POST /auth/login/verify   { challenge_id, code, device?, remember_device? } → 
 
 ### Dispositivo fidato (niente codice a ogni accesso)
 
-- Alla verifica del codice l'app può inviare `remember_device: true`: la risposta contiene un `device_token` (64 caratteri) che l'app salva nel deposito sicuro **e conserva anche dopo l'uscita**.
+- Alla verifica del codice l'app può inviare `remember_device: true`: la risposta contiene un `device_token` (64 caratteri) che l'app salva nel deposito sicuro **e conserva anche dopo l'uscita**, uno per ogni account (lo stesso telefono può ricordare più utenti).
 - Ai login successivi l'app invia `device_token` insieme a email e password. Se è valido (stesso utente, non scaduto né revocato) la risposta è `{ requires_code: false, access_token, refresh_token, user }`: **si entra subito, senza email e senza codice**. La password resta sempre obbligatoria.
 - Se il token è sconosciuto, scaduto o di un altro utente, nessun errore: si prosegue con il codice (`requires_code: true`).
 - Vale **90 giorni dall'ultimo uso**. Si annulla con il cambio o il reset della password e se viene rilevato il riuso di un refresh token.

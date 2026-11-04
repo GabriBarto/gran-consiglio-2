@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
     // Passo 1. Su un dispositivo già verificato entra subito e restituisce null;
     // altrimenti restituisce la risposta con il challenge_id (il codice arriva per email).
     startLogin: async (email, password) => {
-      const res = await api.login(email, password, await loadDeviceToken(), DEVICE);
+      const res = await api.login(email, password, await loadDeviceToken(email), DEVICE);
       if (res.requires_code === false) {
         await storeTokens(res);
         setUser(res.user);
@@ -72,7 +72,7 @@ export function AuthProvider({ children }) {
     // Passo 2: scambia il codice con i token ed entra; il dispositivo viene ricordato.
     finishLogin: async (challengeId, code) => {
       const data = await api.verifyLogin(challengeId, code, DEVICE);
-      if (data.device_token) await saveDeviceToken(data.device_token).catch(() => {});
+      if (data.device_token) await saveDeviceToken(data.user.email, data.device_token).catch(() => {});
       await storeTokens(data);
       setUser(data.user);
     },

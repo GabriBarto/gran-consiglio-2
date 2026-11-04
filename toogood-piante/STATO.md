@@ -55,7 +55,7 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 5 completato e provato** (pannello
 
 **Modifiche dopo la prova (giorno 5, seconda parte):**
 - **Indirizzi:** il geocoding usa OpenStreetMap (Nominatim) e accetta qualsiasi indirizzo, città o paese d'Italia (richiede internet). La versione simulata resta con `GEOCODING_DRIVER=simulated`. Nel tuo `apps/api/.env` non serve cambiare nulla: il valore predefinito è `nominatim`.
-- **Codice solo la prima volta:** dopo un accesso con codice l'app riceve un `device_token`; ai login successivi (anche dopo l'uscita) basta la password. Nuova tabella `trusted_devices`: **eseguire `php artisan migrate`**. Nell'app mobile il token sta in `expo-secure-store`; il pannello admin web non lo usa.
+- **Codice solo la prima volta:** dopo un accesso con codice l'app riceve un `device_token`; ai login successivi (anche dopo l'uscita) basta la password. Nuova tabella `trusted_devices`: **eseguire `php artisan migrate`**. Nell'app mobile i token stanno in `expo-secure-store`, **uno per account** (cliente e venditore sullo stesso telefono: il codice serve la prima volta per ciascuno, poi mai più); il pannello admin web non lo usa.
 - Test: **109 su 109** (11 nuovi: dispositivi fidati e geocoder). Provato dal vivo: Pesaro, Corniglio e Catania trovate, un testo senza senso rifiutato; secondo login senza codice né email. Bundle Android ok. **Da provare sul telefono** il giro completo (registrazione → codice → esci → rientra con la sola password).
 
 ## Scelte da sapere
