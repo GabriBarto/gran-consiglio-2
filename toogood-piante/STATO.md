@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 6 completato e provato sull'API; schermate delle box non ancora provate su telefono**. Giorni 1–5 in `main` (PR #7–#11); il giorno 6 è sul branch locale `giorno-6-box` (**non pubblicato**, nessun push). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 6 completato e provato** (box: creazione, modifica ed eliminazione provate dall'app). Giorni 1–5 in `main` (PR #7–#11); il giorno 6 è sul branch `viggio` (pubblicato il 2026-11-04, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -66,7 +66,7 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 6 completato e provato sull'API; s
 - Modifica: valore e sconto bloccati dopo la prima vendita; la quantità può solo scendere, mai sotto il venduto; eliminazione solo senza vendite. Ogni box conserva la tariffa del momento della creazione.
 - App: nella home del venditore la sezione **Box di oggi** (elenco con prezzo, disponibili e guadagno) e il modulo **Nuova box / Modifica box** con riepilogo del prezzo in tempo reale.
 - Nuovo: `contracts/price-cases.json` (11 casi della formula) eseguito da PHP e da `npm test` nell'app; `docker-compose.yml` monta `contracts/` nei container PHP (**dopo il pull rifare `docker compose up -d` e `php artisan migrate`**: la descrizione della box è ora facoltativa).
-- Test: **150 su 150** backend (31 sulle box, 8 sul geocoding, 2 sulla descrizione facoltativa) e 14 su 14 dell'app (`cd apps/mobile && npm test`). Provato dal vivo sull'API: opzioni, creazione, elenco. Bundle Android ok. **Le schermate non sono state provate su telefono.**
+- Test: **150 su 150** backend (31 sulle box, 8 sul geocoding, 2 sulla descrizione facoltativa) e 14 su 14 dell'app (`cd apps/mobile && npm test`). Provato dal vivo sull'API e **dall'app sul telefono: creazione, modifica ed eliminazione funzionano**. Bundle Android ok.
 - Limiti noti: il prezzo può arrivare a 0 con listini minuscoli (nessun minimo per RB-04) e Stripe non accetta meno di 0,50 €: da gestire nel pagamento (giorno 8). Lo stock "venduto" si simula soltanto: il decremento automatico arriva con il carrello. La pubblicazione non controlla se la fascia di ritiro di oggi è finita.
 - **Geocoding corretto (stesso giorno):** prima OpenStreetMap restituiva il miglior civico anche in un altro comune (`Via Garibaldi 12, Bologna` → Sasso Marconi) e l'app lo accettava. Ora si chiedono 8 risultati e si sceglie quello il cui comune (o frazione/quartiere) **coincide per nome** con la città scritta dopo l'ultima virgola (ignorando accenti, maiuscole, articoli, CAP e sigla di provincia; la provincia non conta). Se non c'è, l'errore `ADDRESS_CITY_MISMATCH` dice dove si trova l'indirizzo più simile e nulla viene salvato. Con la sola città (`Pesaro`) non si confronta. Regola per chi inserisce un indirizzo: **via, numero, città** con la virgola; se OpenStreetMap non conosce quel civico nella città, va usato un altro indirizzo. Esempi che funzionano: `Via Rizzoli 5, Bologna`, `Via Rossini 10, Pesaro`, `Via Torino 10, Milano`.
 
@@ -94,7 +94,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–5 sono in `main` (PR #7, #8, #9, #10, #11). Il giorno 6 è sul branch locale `giorno-6-box`, creato da `main`: **non pubblicato** (nessun push, nessuna PR) su richiesta.
+- Git: i giorni 1–5 sono in `main` (PR #7, #8, #9, #10, #11). Il giorno 6 è sul branch `viggio` (da `giorno-6-box`, creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
