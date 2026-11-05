@@ -58,6 +58,11 @@ class Order extends Model
         return $this->hasOne(PickupToken::class);
     }
 
+    public function payout(): HasOne
+    {
+        return $this->hasOne(Payout::class);
+    }
+
     public function reservations(): HasMany
     {
         return $this->hasMany(StockReservation::class);

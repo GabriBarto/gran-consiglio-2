@@ -155,6 +155,24 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
 
+### Prova gli incassi e il pagamento al venditore (giorno 11)
+
+Serve almeno un ordine **pagato** (vedi "Prova l'acquisto dall'app"). Non serve rifare `npm install` né migrare: nessuna dipendenza e nessuna migrazione nuova.
+
+1. **Venditore:** nella home, sotto "Ritiri di oggi", la scheda **Incassi** mostra "In attesa di trasferimento" con l'importo (prezzo − tariffa per box) e, per ogni ordine, la frase "verranno trasferiti dopo il GG/MM/AAAA" (fine fascia + 24 ore).
+2. **Far partire il pagamento:** dal PC
+   ```bash
+   docker compose exec php php artisan clock advance 26h
+   docker compose exec php php artisan orders:close-pickup
+   docker compose exec php php artisan payouts:run
+   docker compose exec php php artisan clock reset
+   ```
+   `payouts:run` stampa quanti pagamenti sono stati inviati, saltati, sospesi o falliti. Nell'app (tocca **Aggiorna** nella scheda) l'importo passa a **Già trasferito** e l'ordine a "Trasferito".
+3. **Guadagno negativo:** con una box dal prezzo sotto la tariffa (1,50 €) l'ordine mostra "Guadagno −0,50 € (nessun addebito)" e **nessun trasferimento**.
+4. **Riprovare:** ripetere `payouts:run` non paga due volte.
+
+**Attenzione:** come per il ritiro, `clock advance` vale per tutto il database di sviluppo e chiude come "Non ritirato" anche gli altri tuoi ordini pagati; vedi sotto come rimetterli a "Pagato" (se rimetti a Pagato un ordine il cui payout è già stato inviato, non verrà pagato di nuovo).
+
 ### Prova il ritiro con il QR (giorno 10)
 
 Serve un ordine **pagato** (vedi "Prova l'acquisto dall'app") e **due telefoni** (uno per il cliente, uno per il venditore), oppure un solo telefono con un account alla volta. Dopo il pull: `cd apps/mobile && npm install` (nuove librerie per QR e fotocamera) e poi `npx expo start --clear`. L'app chiederà il **permesso della fotocamera** al venditore.
@@ -287,6 +305,7 @@ docker compose exec php php artisan migrate
 | Verifica dei servizi | `docker compose exec php php artisan toogood:check-services` |
 | Interfaccia web del database (Adminer, http://localhost:8081) | `docker compose --profile tools up -d` |
 | Orologio simulato: ora attuale / avanti di 24 ore / azzera | `docker compose exec php php artisan clock now` · `clock advance 24h` · `clock reset` |
+| Eseguire ora i pagamenti ai venditori scaduti | `docker compose exec php php artisan payouts:run` |
 | Spegnere tutto (i dati restano) | `docker compose down` |
 | Spegnere e **cancellare** il database | `docker compose down -v` |
 

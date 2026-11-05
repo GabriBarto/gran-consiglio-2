@@ -13,3 +13,6 @@ Schedule::command('reservations:release')->everyMinute()->withoutOverlapping();
 
 // A fine fascia di ritiro gli ordini pagati e mai scansionati diventano "non ritirati"
 Schedule::command('orders:close-pickup')->everyMinute()->withoutOverlapping();
+
+// Pagamento al venditore 24 ore dopo la fine della fascia di ritiro (RB-11)
+Schedule::command('payouts:run')->everyTenMinutes()->withoutOverlapping();
