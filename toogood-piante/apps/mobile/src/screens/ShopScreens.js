@@ -1,23 +1,24 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Switch, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, Switch, Text, View } from 'react-native';
 import { api } from '../api';
 import { useAuth } from '../AuthContext';
+import { quantityInCart } from '../cart';
+import { useCart } from '../CartContext';
 import { errorMessage } from '../errors';
 import { getLastPosition, requestPosition } from '../location';
 import { savePendingBox } from '../pendingBox';
+import { timeOf } from '../orders';
 import { formatDistance, formatEuro } from '../pricing';
-import { Button, Card, colors, ErrorText, Field, Hint, LinkText, Screen, Title } from '../ui';
+import { Button, Card, colors, ErrorText, Field, Hint, LinkText, Screen, Stepper, Title } from '../ui';
 
 const ratingText = (rating) => (rating.count > 0
   ? `★ ${String(rating.average).replace('.', ',')} (${rating.count} ${rating.count === 1 ? 'recensione' : 'recensioni'})`
   : 'Nessuna recensione');
 
-// "2026-06-15T17:00:00+02:00" → "17:00": l'ora è già quella di Roma, senza passare dal fuso del telefono
-const timeOf = (iso) => iso.slice(11, 16);
-
 // Ricerca dei negozi per distanza, città e nome. Pubblica: ci arriva anche chi non ha un account.
 export function ShopsScreen({ navigation }) {
   const { user, logout } = useAuth();
+  const cart = useCart();
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [showEmpty, setShowEmpty] = useState(false);
@@ -65,6 +66,17 @@ export function ShopsScreen({ navigation }) {
   return (
     <Screen>
       <Title>Box di piante vicino a te</Title>
+
+      {user?.role === 'CUSTOMER' ? (
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Button title={cart.totals.units > 0 ? `Carrello (${cart.totals.units})` : 'Carrello'} secondary onPress={() => navigation.navigate('Cart')} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Button title="I miei ordini" secondary onPress={() => navigation.navigate('Orders')} />
+          </View>
+        </View>
+      ) : null}
 
       {loc.state === 'granted' ? <Text style={{ color: colors.green, marginBottom: 12 }}>I negozi sono ordinati per distanza da te.</Text> : null}
       {loc.state === 'asking' ? <Hint>Cerco la tua posizione…</Hint> : null}
@@ -118,6 +130,7 @@ export function ShopsScreen({ navigation }) {
 export function ShopScreen({ route, navigation }) {
   const { shopId, boxId, fromIntent } = route.params;
   const { user } = useAuth();
+  const cart = useCart();
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
 
@@ -183,36 +196,87 @@ export function ShopScreen({ route, navigation }) {
       <Text style={{ fontSize: 18, fontWeight: '700', color: colors.text, marginBottom: 8 }}>Box di oggi</Text>
       {boxes.length === 0 ? <Hint>Questo negozio non ha box in vendita oggi.</Hint> : null}
       {boxes.map((box) => (
-        <Card key={box.id} style={box.id === boxId ? { borderColor: colors.green, borderWidth: 2 } : null}>
-          <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>{box.box_type.label}</Text>
-          <Text style={{ color: colors.muted, marginBottom: 6 }}>{box.category.label}</Text>
-          {box.description ? <Text style={{ color: colors.text, marginBottom: 6 }}>{box.description}</Text> : null}
-          {box.attributes.length ? <Text style={{ color: colors.muted, marginBottom: 6 }}>{box.attributes.map((a) => a.label).join(' · ')}</Text> : null}
-
-          <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>{formatEuro(box.price_cents)}</Text>
-          <Text style={{ color: colors.green, fontWeight: '600' }}>
-            Risparmi almeno {formatEuro(box.min_saving_cents)} (valore di listino {formatEuro(box.list_value_cents)})
-          </Text>
-
-          {box.sold_out ? (
-            <Text style={{ color: colors.error, fontWeight: '700', marginTop: 8 }}>Esaurita</Text>
-          ) : (
-            <Text style={{ color: colors.text, marginTop: 6 }}>{box.stock_available === 1 ? 'Ne resta 1' : `Ne restano ${box.stock_available}`}</Text>
-          )}
-
-          {box.unavailable_reason === 'ORDER_DEADLINE_PASSED' ? (
-            <Text style={{ color: colors.error, fontWeight: '600', marginTop: 8 }}>Ordini chiusi: il limite era alle {timeOf(shop.order_deadline)}</Text>
-          ) : null}
-
-          {box.orderable && !user ? <Button title="Accedi per acquistare" onPress={() => buyAsGuest(box)} /> : null}
-          {box.orderable && user?.role === 'CUSTOMER' ? (
-            <Hint>L’acquisto con il carrello arriva nel prossimo aggiornamento.</Hint>
-          ) : null}
-        </Card>
+        <BoxCard key={box.id} box={box} shop={shop} highlighted={box.id === boxId} user={user} onGuestBuy={() => buyAsGuest(box)} />
       ))}
+
+      {user?.role === 'CUSTOMER' && cart.totals.units > 0 ? (
+        <Button title={`Vai al carrello · ${cart.totals.units} box · ${formatEuro(cart.totals.total_cents)}`} onPress={() => navigation.navigate('Cart')} />
+      ) : null}
 
       <LinkText onPress={load}>Aggiorna</LinkText>
     </Screen>
+  );
+}
+
+// Una box della scheda: descrizione, prezzo, risparmio, stock e — per il cliente — quantità e "Aggiungi al carrello".
+function BoxCard({ box, shop, highlighted, user, onGuestBuy }) {
+  const cart = useCart();
+  const [quantity, setQuantity] = useState(1);
+  const [message, setMessage] = useState('');
+  const isCustomer = user?.role === 'CUSTOMER';
+  const inCart = quantityInCart(cart.cart, box.id);
+  const left = Math.max(0, box.stock_available - inCart); // quante se ne possono ancora aggiungere
+
+  const report = ({ added, atLimit }) => {
+    setMessage(added === 0
+      ? 'Hai già nel carrello tutte le box disponibili.'
+      : `Aggiunte al carrello: ${added}.${atLimit ? ' Hai preso tutte quelle disponibili.' : ''}`);
+    setQuantity(1);
+  };
+
+  const addToCart = () => {
+    // Un carrello è di un solo negozio (US-C04 CA1): per cambiare negozio si chiede conferma
+    if (cart.isOtherShop(shop.id)) {
+      Alert.alert(
+        'Cambiare negozio?',
+        'Il carrello contiene box di un altro negozio, ma un ordine può avere box di un solo negozio. Vuoi svuotarlo e aggiungere questa box?',
+        [
+          { text: 'Annulla', style: 'cancel' },
+          { text: 'Svuota e aggiungi', style: 'destructive', onPress: () => report(cart.replaceWith(shop, box, quantity)) },
+        ],
+      );
+      return;
+    }
+    report(cart.add(shop, box, quantity));
+  };
+
+  return (
+    <Card style={highlighted ? { borderColor: colors.green, borderWidth: 2 } : null}>
+      <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text }}>{box.box_type.label}</Text>
+      <Text style={{ color: colors.muted, marginBottom: 6 }}>{box.category.label}</Text>
+      {box.description ? <Text style={{ color: colors.text, marginBottom: 6 }}>{box.description}</Text> : null}
+      {box.attributes.length ? <Text style={{ color: colors.muted, marginBottom: 6 }}>{box.attributes.map((a) => a.label).join(' · ')}</Text> : null}
+
+      <Text style={{ fontSize: 22, fontWeight: '700', color: colors.text }}>{formatEuro(box.price_cents)}</Text>
+      <Text style={{ color: colors.green, fontWeight: '600' }}>
+        Risparmi almeno {formatEuro(box.min_saving_cents)} (valore di listino {formatEuro(box.list_value_cents)})
+      </Text>
+
+      {box.sold_out ? (
+        <Text style={{ color: colors.error, fontWeight: '700', marginTop: 8 }}>Esaurita</Text>
+      ) : (
+        <Text style={{ color: colors.text, marginTop: 6 }}>{box.stock_available === 1 ? 'Ne resta 1' : `Ne restano ${box.stock_available}`}</Text>
+      )}
+
+      {box.unavailable_reason === 'ORDER_DEADLINE_PASSED' ? (
+        <Text style={{ color: colors.error, fontWeight: '600', marginTop: 8 }}>Ordini chiusi: il limite era alle {timeOf(shop.order_deadline)}</Text>
+      ) : null}
+
+      {box.orderable && !user ? <Button title="Accedi per acquistare" onPress={onGuestBuy} /> : null}
+
+      {box.orderable && isCustomer ? (
+        <View style={{ marginTop: 12 }}>
+          {inCart > 0 ? <Text style={{ color: colors.green, fontWeight: '600', marginBottom: 8 }}>Nel carrello: {inCart}</Text> : null}
+          {left > 0 ? (
+            <>
+              <Stepper value={Math.min(quantity, left)} min={1} max={left} onChange={setQuantity} />
+              <Button title="Aggiungi al carrello" onPress={addToCart} />
+            </>
+          ) : <Hint>Hai già nel carrello tutte le box disponibili.</Hint>}
+          {message ? <Text style={{ color: colors.muted, marginTop: 8 }}>{message}</Text> : null}
+        </View>
+      ) : null}
+    </Card>
   );
 }
 

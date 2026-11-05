@@ -30,7 +30,14 @@ const BY_CODE = {
   QUANTITY_BELOW_SOLD: 'Non puoi scendere sotto il numero di box già vendute.',
   BOX_NOT_EDITABLE: 'Le box si modificano solo nel giorno di vendita.',
   BOX_HAS_ORDERS: 'Ci sono ordini per questa box: non si può eliminare. Puoi ridurre la quantità a quanto già venduto.',
-  NOT_FOUND: 'Box non trovata: potrebbe essere già stata eliminata.',
+  NOT_FOUND: 'Non trovato: potrebbe essere stato eliminato.',
+  OUT_OF_STOCK: 'Alcune box non sono più disponibili nella quantità richiesta.',
+  ORDER_DEADLINE_PASSED: 'L’orario limite per ordinare da questo negozio è passato.',
+  BOX_NOT_FOUND: 'Una delle box non esiste più.',
+  BOX_NOT_AVAILABLE: 'Una delle box non è più in vendita.',
+  MIXED_SHOPS: 'Un ordine può contenere box di un solo negozio.',
+  SHOP_NOT_AVAILABLE: 'Questo negozio non può ricevere ordini in questo momento.',
+  PAYMENT_AMOUNT_TOO_LOW: 'Il totale è troppo basso per essere pagato con carta (minimo 0,50 €).',
 };
 
 const BY_FIELD = {
@@ -56,6 +63,7 @@ const BY_FIELD = {
   list_value_cents: 'Inserisci il valore di listino (almeno 0,01 €).',
   discount_pct: 'Lo sconto deve essere tra il 60% e il 70%.',
   quantity: 'La quantità deve essere almeno 1.',
+  accept_no_refund: 'Per ordinare devi accettare che, se non ritiri la box, non è previsto rimborso.',
 };
 
 export function errorMessage(err) {

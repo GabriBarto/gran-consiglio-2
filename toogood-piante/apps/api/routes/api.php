@@ -73,6 +73,7 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
 
     // Ordini del cliente: checkout con stock riservato e pagamento (giorno 8)
     Route::prefix('orders')->middleware('role:CUSTOMER')->group(function () {
+        Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store'])->middleware('throttle:checkout');
         Route::get('{order}', [OrderController::class, 'show'])->whereNumber('order');
         Route::post('{order}/simulate-payment', [OrderController::class, 'simulatePayment'])->whereNumber('order');

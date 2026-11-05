@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 8 completato lato server e provato sull'API (nessuna schermata nuova: l'app è il giorno 9)**. Giorni 1–7 in `main` (PR #7–#15); il giorno 8 è sul branch `andres` (pubblicato il 2026-11-04, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-04 – **giorno 9 scritto e provato (logica e API); schermate non ancora provate su telefono**. Giorni 1–8 in `main` (PR #7–#16); il giorno 9 è sul branch `mich` (pubblicato il 2026-11-05, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -13,6 +13,7 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 8 completato lato server e provato
   - [Giorno 6 – box](docs/scelte/giorno-6-box.md)
   - [Giorno 7 – ricerca e scheda negozio](docs/scelte/giorno-7-ricerca.md)
   - [Giorno 8 – ordini, stock riservato e pagamenti](docs/scelte/giorno-8-ordini.md)
+  - [Giorno 9 – app cliente: carrello, pagamento e storico](docs/scelte/giorno-9-app-ordini.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
 - Endpoint delle box e formula del prezzo: [docs/API-box.md](docs/API-box.md)
@@ -96,6 +97,17 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 8 completato lato server e provato
 - Limiti noti: manca il QR di ritiro (giorno 10) e il pagamento al venditore (giorno 11), anche se l'email di conferma li menziona già; nessun elenco ordini; con Stripe vero servono chiavi di test e il profilo Docker `stripe` per i webhook (mai provato: si è usato il simulatore).
 - Per provare a mano senza l'app serve un cliente con un token (vedi [docs/AVVIO.md](docs/AVVIO.md)).
 
+**Giorno 9 – app cliente: carrello, pagamento e storico ordini** — **Acquisto completo dall'app** (in modalità prova):
+- Scheda negozio: per il cliente ogni box ha quantità (− e +, entro lo stock) e **Aggiungi al carrello**; un altro negozio nel carrello → conferma e lo svuota (un carrello, un negozio). In alto, "Vai al carrello". Nella ricerca, due scorciatoie: **Carrello** e **I miei ordini**.
+- **Carrello**: quantità, totale, "risparmi almeno", fascia di ritiro, orario limite d'ordine; si **riallinea con il negozio** ogni volta che si apre (toglie box esaurite o non più ordinabili, riduce le quantità, avvisa se il prezzo è cambiato).
+- **Pagamento**: riepilogo, avviso rosso "nessun rimborso" con **casella obbligatoria**, poi ordine con **conto alla rovescia dei 10 minuti**. In prova: "Paga (prova)" (passa dal codice del webhook vero) e "Simula un pagamento fallito". `OUT_OF_STOCK`: elenca le box che mancano e conferma che non è stato addebitato nulla.
+- **Conferma** dopo il pagamento (la navigazione riparte da "negozi → ordine") e **storico**: tutti gli ordini con stato (In attesa di pagamento, Pagato, Rimborsato…); dal dettaglio di un ordine in attesa si può ancora pagare.
+- API: nuovo `GET /orders` (ultimi 50; non mostra gli ordini scaduti o falliti) e `payment_simulated` nel dettaglio.
+- Nuovi file: `src/cart.js`, `src/orders.js` (logica pura), `src/CartContext.js`, `src/screens/OrderScreens.js`; il carrello è in memoria e si svuota cambiando utente.
+- Test: **212 su 212** backend (6 nuovi sullo storico) e **37 su 37** dell'app (22 nuovi su carrello e ordini). Un controllo d'integrazione ha percorso l'intero giro dell'app (ricerca → scheda → carrello → ordine → `OUT_OF_STOCK` per un secondo cliente → pagamento → storico → pagamento fallito) con la logica reale dell'app contro l'API vera: tutto d'accordo. Bundle Android ok. **Le schermate non sono state provate su telefono.**
+- Limiti noti: la **carta vera** non c'è (servirebbe il modulo di Stripe, chiavi di test e una build dedicata: con Expo Go non basta): in app c'è solo il pagamento di prova, e con un server non in modalità prova l'app lo dice e non mostra il pulsante; il QR di ritiro è il giorno 10 (la schermata dell'ordine lo annuncia); il carrello si perde se si chiude l'app.
+- Per provare servono un negozio approvato, con conto collegato e una box di oggi, e un account **cliente**: vedi [docs/AVVIO.md](docs/AVVIO.md).
+
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
 - Una P.IVA inesistente è rifiutata; se il servizio di verifica è giù il profilo si salva con controllo "non verificato" e decide l'admin.
@@ -107,8 +119,8 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 8 completato lato server e provato
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 9 – app cliente: carrello, checkout e storico ordini
-Nell'app: "Aggiungi al carrello" sulla scheda del negozio (un solo negozio, quantità fino allo stock), carrello con totale, risparmio minimo, fascia di ritiro e orario limite, checkout con la casella "nessun rimborso", pagamento (con il simulatore: pulsante che chiama `simulate-payment`; con Stripe vero servirà l'SDK di Stripe e `client_secret`), schermata di conferma e **storico degli ordini** (serve `GET /orders`, da aggiungere). Va gestito il conto alla rovescia dei 10 minuti (`reserved_until`) e l'errore `OUT_OF_STOCK`. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene **provare a mano il giro API** (vedi AVVIO.md) e controllare le email in Mailpit.
+## Prossimo: giorno 10 – QR di ritiro, scansione e stati dell'ordine
+QR monouso e firmato, valido solo nel giorno e nella fascia di ritiro, con codice alfanumerico alternativo (token e `pickup_tokens` esistono già nello schema); schermata del cliente con il QR (salvato localmente, anche con connessione debole); scansione con la **fotocamera del venditore** (nuovo permesso e libreria nell'app); stati ritirato / non ritirato (job a fine fascia); elenco degli ordini del giorno per il venditore. L'email di conferma e la schermata dell'ordine promettono già il QR. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene **provare a mano il giro d'acquisto sul telefono** (vedi AVVIO.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -120,7 +132,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è sul branch `andres` (da `giorno-8-carrello`, creato da `main`), pubblicato il 2026-11-04, **senza pull request ancora**.
+- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è sul branch `mich` (da `giorno-9-app-ordini`, creato da `main`), pubblicato il 2026-11-05, **senza pull request ancora**.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.

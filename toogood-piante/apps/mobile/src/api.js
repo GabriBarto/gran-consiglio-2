@@ -2,11 +2,12 @@ import { File } from 'expo-file-system';
 import { API_URL } from './config';
 
 export class ApiError extends Error {
-  constructor(status, code, message, fields) {
+  constructor(status, code, message, fields, data) {
     super(message);
     this.status = status;
     this.code = code;
     this.fields = fields;
+    this.data = data; // il corpo intero della risposta (es. le box che mancano in OUT_OF_STOCK)
   }
 }
 
@@ -37,7 +38,7 @@ async function send(method, path, body, token) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     const code = data.code ?? (res.status === 429 ? 'RATE_LIMITED' : undefined);
-    throw new ApiError(res.status, code, data.message ?? 'Error', data.errors);
+    throw new ApiError(res.status, code, data.message ?? 'Error', data.errors, data);
   }
   return data;
 }
@@ -97,6 +98,13 @@ export const api = {
   // Ricerca e scheda dei negozi (pubbliche: funzionano anche senza accesso)
   shops: (params) => publicRequest('GET', `/shops${query(params)}`),
   shop: (id, position) => publicRequest('GET', `/shops/${id}${query(position)}`),
+
+  // Ordini del cliente
+  orders: () => request('GET', '/orders'),
+  order: (id) => request('GET', `/orders/${id}`),
+  createOrder: (payload) => request('POST', '/orders', payload),
+  // Solo sviluppo (stripe-mock non ha carte): l'API lo accetta solo se il pagamento è simulato
+  simulatePayment: (id, outcome = 'succeeded') => request('POST', `/orders/${id}/simulate-payment`, { outcome }),
 
   // Box del giorno
   boxOptions: () => request('GET', '/seller/box-options'),
