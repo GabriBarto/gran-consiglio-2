@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-05 – **giorno 10 completato e provato** (QR e scansione provati dall'app). Giorni 1–9 in `main` (PR #7–#17); il giorno 10 è sul branch `viggio` (pubblicato il 2026-11-05, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-05 – **giorno 11 completato** (payout ritardato e incassi; provato con test, `stripe-mock` e **dal telefono**). Giorni 1–10 in `main` (PR #7–#18); il giorno 11 è sul branch `giorno-11-payout`, non ancora pubblicato. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -15,12 +15,14 @@ Ultimo aggiornamento: 2026-11-05 – **giorno 10 completato e provato** (QR e sc
   - [Giorno 8 – ordini, stock riservato e pagamenti](docs/scelte/giorno-8-ordini.md)
   - [Giorno 9 – app cliente: carrello, pagamento e storico](docs/scelte/giorno-9-app-ordini.md)
   - [Giorno 10 – QR di ritiro](docs/scelte/giorno-10-qr-ritiro.md)
+  - [Giorno 11 – payout ritardato e incassi](docs/scelte/giorno-11-payout.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
 - Endpoint delle box e formula del prezzo: [docs/API-box.md](docs/API-box.md)
 - Endpoint di ricerca e scheda dei negozi (pubblici): [docs/API-negozi.md](docs/API-negozi.md)
 - Endpoint degli ordini, dei pagamenti e del webhook Stripe: [docs/API-ordini.md](docs/API-ordini.md)
 - Endpoint del ritiro con QR (biglietto, scansione, ordini del giorno): [docs/API-ritiro.md](docs/API-ritiro.md)
+- Endpoint degli incassi e pagamenti ai venditori: [docs/API-incassi.md](docs/API-incassi.md)
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -122,6 +124,15 @@ Ultimo aggiornamento: 2026-11-05 – **giorno 10 completato e provato** (QR e sc
 - **Attenzione, effetto collaterale dell'orologio simulato:** `clock advance` vale per tutto il database di sviluppo. Durante la prova ha chiuso come "non ritirato" anche un tuo ordine reale di prova (#23, "Vivaio Notte"), che ho **rimesso a `PAID`**. Dopo ogni prova con `clock advance` conviene controllare gli ordini (vedi [docs/AVVIO.md](docs/AVVIO.md)).
 - Limiti noti: il QR vale per il giorno dell'ordine; nessun annullamento di una scansione sbagliata; il payout al venditore è il giorno 11; la prova su dispositivo è stata fatta a mano dal team, non è automatica.
 
+**Giorno 11 – payout ritardato e incassi del venditore** (endpoint: [docs/API-incassi.md](docs/API-incassi.md)):
+- **Payout:** quando l'ordine risulta pagato nasce una riga `payouts` `SCHEDULED` da eseguire a **fine fascia di ritiro + 24 ore** (parametro `payout_delay_hours` in `config_params`). Vale sia per gli ordini ritirati sia per quelli non ritirati. Importo = `Σ quantità × max(0, prezzo − tariffa)`, per box: una box in perdita non intacca le altre e non si addebita mai nulla al venditore.
+- **Esecuzione:** comando `payouts:run` ogni 10 minuti: trasferimento Stripe Connect (con `stripe-mock`: simulato) → `SENT`; importo 0 o ordine rimborsato per intero → `SKIPPED`; ordine `IN_COMPLAINT` → `HELD`. Un solo pagamento alla volta (riga bloccata) e chiave di idempotenza `payout-<id>`: rilanciarlo non paga due volte. Se Stripe non risponde il payout resta `SCHEDULED`, riprova al giro dopo, gli altri non si fermano e il comando esce con codice 1. Crea anche i payout mancanti degli ordini pagati prima del giorno 11.
+- **Incassi:** `GET /seller/earnings` con riepilogo (ordini, incassato, tariffe, guadagno anche **negativo**, trasferito, in attesa, sospeso) ed elenco degli ordini con lo stato del pagamento; niente dati dei clienti; gli ordini rimborsati per intero non contano.
+- **App venditore:** nella home, sotto "Ritiri di oggi", la scheda **Incassi** (anche per un negozio sospeso). Nuovi: `src/earnings.js` (logica pura), `src/screens/EarningsScreens.js`. Nessuna nuova dipendenza.
+- Nuovi: `Payout`, `PayoutService`, `TransferService`, `RunPayouts`, `EarningsController`. **Nessuna migrazione** (la tabella `payouts` c'era dal giorno 1).
+- Test: **253 su 253** backend (21 nuovi: calcolo dell'importo, data di esecuzione, ritardo configurabile, ritirato e non ritirato, doppia esecuzione, errore di Stripe, reclamo, rimborso, ordini precedenti, riepilogo, privacy) e **48 su 48** dell'app (6 nuovi). Provato sul vero `stripe-mock`: il trasferimento va a buon fine, e `payouts:run` sul database di sviluppo ha programmato il payout dell'ordine esistente (76,20 €) senza inviare nulla. Bundle Android ok.
+- **Provato dal team sul telefono:** la scheda Incassi mostra l'importo "in attesa"; dopo `clock advance 26h` e `payouts:run` passa a "Trasferito". Nota: lo scheduler dei container esegue `payouts:run` da solo ogni 10 minuti, quindi il pagamento può partire anche senza lanciarlo a mano. Dopo la prova: `clock reset` (vedi [docs/AVVIO.md](docs/AVVIO.md)).- Limiti noti: nessuna email al venditore quando il pagamento parte; rimborso parziale e storno di un trasferimento già inviato (`REVERSED`) arrivano col giorno 12; con Stripe vero servono chiavi di test e il conto Connect con `transfers` attivo (mai provato); la chiamata a Stripe avviene con la riga bloccata (va bene per poche decine di payout al giorno).
+
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
 - Una P.IVA inesistente è rifiutata; se il servizio di verifica è giù il profilo si salva con controllo "non verificato" e decide l'admin.
@@ -133,8 +144,8 @@ Ultimo aggiornamento: 2026-11-05 – **giorno 10 completato e provato** (QR e sc
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 11 – payout ritardato, riepilogo incassi
-Pagamento al venditore **24 ore dopo la fine della fascia di ritiro** (sia per gli ordini ritirati sia per quelli non ritirati): importo `max(0, prezzo − tariffa)` per box, trasferimento Stripe Connect (con `stripe-mock`: simulato), stato `SCHEDULED/PAID/SKIPPED`, importo 0 → saltato; riepilogo incassi del venditore (ordini, tariffe trattenute, trasferito, in attesa, sospeso) e ordini del giorno già c'è. Tabella `payouts` già nello schema; la fine fascia ora è marcata da `orders:close-pickup`. Il reclamo aperto sospenderà il payout (giorno 12). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). QR e scansione sono già stati provati sul telefono.
+## Prossimo: giorno 12 – recensioni, reclami e rimborsi (Traguardo 2)
+Recensioni dopo il ritiro (1–5 stelle, testo, media nel negozio), reclami solo testuali nei 4 casi ammessi entro 24 ore, decisione dell'admin (rimborso totale, parziale o rifiuto) con rimborso Stripe. Un reclamo aperto porta l'ordine a `IN_COMPLAINT` e il payout a `HELD` (già gestito dal giorno 11); un rimborso totale lo fa `SKIPPED`; uno parziale riduce l'importo; dopo l'invio serve lo storno (`REVERSED`). Tabelle `reviews`, `complaints`, `refunds` già nello schema. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -146,7 +157,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è in `main` (PR #17). Il giorno 10 è sul branch `viggio` (da `giorno-10-qr-ritiro`, creato da `main`), pubblicato il 2026-11-05, **senza pull request ancora**.
+- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è in `main` (PR #17). Il giorno 10 è in `main` (PR #18). Il giorno 11 è sul branch `giorno-11-payout` (creato da `main`), **non ancora pubblicato** e senza pull request.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.

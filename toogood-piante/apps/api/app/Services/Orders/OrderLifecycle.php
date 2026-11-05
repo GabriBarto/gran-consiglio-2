@@ -4,6 +4,7 @@ namespace App\Services\Orders;
 
 use App\Models\Order;
 use App\Models\StockReservation;
+use App\Services\Payouts\PayoutService;
 use App\Services\Stripe\PaymentService;
 use App\Support\Clock;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class OrderLifecycle
         private readonly PaymentService $payments,
         private readonly OrderNotifier $notifier,
         private readonly PickupService $pickup,
+        private readonly PayoutService $payouts,
     ) {}
 
     /**
@@ -98,6 +100,8 @@ class OrderLifecycle
                 $order->save();
                 // QR e codice di ritiro: pronti già per l'email di conferma
                 $this->pickup->issue($order);
+                // Il pagamento al venditore parte più tardi (fine fascia + 24 ore)
+                $this->payouts->schedule($order);
 
                 return [$order, 'paid'];
             }

@@ -13,6 +13,7 @@ use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Seller\BoxController;
 use App\Http\Controllers\Seller\DocumentController;
+use App\Http\Controllers\Seller\EarningsController;
 use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\ProfileController;
 use App\Http\Controllers\Seller\StripeController;
@@ -67,6 +68,9 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         // Ritiri: ordini del giorno e scansione del QR del cliente (giorno 10)
         Route::get('orders', [SellerOrderController::class, 'index']);
         Route::post('pickup/scan', [PickupController::class, 'scan'])->middleware('throttle:scan');
+
+        // Incassi e pagamenti ricevuti (giorno 11)
+        Route::get('earnings', [EarningsController::class, 'index']);
 
         // Box del giorno (giorno 6)
         Route::get('box-options', [BoxController::class, 'options']);

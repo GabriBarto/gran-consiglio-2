@@ -109,6 +109,7 @@ export const api = {
   // Ritiro con QR: il biglietto del cliente, gli ordini del giorno del venditore e la scansione
   pickupTicket: (orderId) => request('GET', `/orders/${orderId}/pickup`),
   sellerOrders: () => request('GET', '/seller/orders'),
+  sellerEarnings: () => request('GET', '/seller/earnings'),
   scanPickup: (body) => request('POST', '/seller/pickup/scan', body), // { qr } oppure { code }
 
   // Box del giorno

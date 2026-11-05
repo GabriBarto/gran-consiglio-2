@@ -7,6 +7,7 @@ import { useAuth } from '../AuthContext';
 import { errorMessage } from '../errors';
 import { useAction } from '../useAction';
 import { TodayBoxes } from './BoxScreens';
+import { Earnings } from './EarningsScreens';
 import { TodayPickups } from './PickupScreens';
 import { Button, colors, ErrorText, Field, Hint, LinkText, Screen, Title } from '../ui';
 
@@ -141,6 +142,8 @@ export function SellerHome({ navigation }) {
 
       {/* Gli ordini già pagati si ritirano anche se il negozio è stato sospeso */}
       {info.status === 'APPROVED' || info.status === 'SUSPENDED' ? <TodayPickups navigation={navigation} /> : null}
+      {/* Anche un negozio sospeso riceve i pagamenti degli ordini già pagati (RB-11) */}
+      {info.status === 'APPROVED' || info.status === 'SUSPENDED' ? <Earnings /> : null}
 
       <LinkText onPress={load}>Aggiorna stato</LinkText>
       <Button title="Esci" secondary onPress={logout} />
