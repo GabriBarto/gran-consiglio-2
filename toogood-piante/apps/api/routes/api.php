@@ -8,10 +8,12 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\TokenController;
 use App\Http\Controllers\MeController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PickupController;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\Seller\BoxController;
 use App\Http\Controllers\Seller\DocumentController;
+use App\Http\Controllers\Seller\SellerOrderController;
 use App\Http\Controllers\Seller\ProfileController;
 use App\Http\Controllers\Seller\StripeController;
 use Illuminate\Support\Facades\Route;
@@ -62,6 +64,10 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::post('stripe/onboarding', [StripeController::class, 'onboarding']);
         Route::post('stripe/sync', [StripeController::class, 'sync']);
 
+        // Ritiri: ordini del giorno e scansione del QR del cliente (giorno 10)
+        Route::get('orders', [SellerOrderController::class, 'index']);
+        Route::post('pickup/scan', [PickupController::class, 'scan'])->middleware('throttle:scan');
+
         // Box del giorno (giorno 6)
         Route::get('box-options', [BoxController::class, 'options']);
         Route::get('boxes', [BoxController::class, 'index']);
@@ -76,6 +82,7 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::get('/', [OrderController::class, 'index']);
         Route::post('/', [OrderController::class, 'store'])->middleware('throttle:checkout');
         Route::get('{order}', [OrderController::class, 'show'])->whereNumber('order');
+        Route::get('{order}/pickup', [PickupController::class, 'show'])->whereNumber('order');
         Route::post('{order}/simulate-payment', [OrderController::class, 'simulatePayment'])->whereNumber('order');
     });
 

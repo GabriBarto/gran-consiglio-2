@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /** Ordine di un cliente presso un solo negozio. Importi in centesimi. */
 class Order extends Model
@@ -12,6 +13,10 @@ class Order extends Model
     public const PENDING_PAYMENT = 'PENDING_PAYMENT';
 
     public const PAID = 'PAID';
+
+    public const PICKED_UP = 'PICKED_UP';
+
+    public const NOT_PICKED_UP = 'NOT_PICKED_UP';
 
     public const EXPIRED = 'EXPIRED';
 
@@ -46,6 +51,11 @@ class Order extends Model
     public function items(): HasMany
     {
         return $this->hasMany(OrderItem::class);
+    }
+
+    public function pickupToken(): HasOne
+    {
+        return $this->hasOne(PickupToken::class);
     }
 
     public function reservations(): HasMany

@@ -7,6 +7,7 @@ import { useAuth } from '../AuthContext';
 import { errorMessage } from '../errors';
 import { useAction } from '../useAction';
 import { TodayBoxes } from './BoxScreens';
+import { TodayPickups } from './PickupScreens';
 import { Button, colors, ErrorText, Field, Hint, LinkText, Screen, Title } from '../ui';
 
 const STATUS_TEXT = {
@@ -137,6 +138,9 @@ export function SellerHome({ navigation }) {
       ) : info.status === 'APPROVED' ? (
         <Hint>Per pubblicare box ti manca solo di collegare il conto di pagamento.</Hint>
       ) : null}
+
+      {/* Gli ordini già pagati si ritirano anche se il negozio è stato sospeso */}
+      {info.status === 'APPROVED' || info.status === 'SUSPENDED' ? <TodayPickups navigation={navigation} /> : null}
 
       <LinkText onPress={load}>Aggiorna stato</LinkText>
       <Button title="Esci" secondary onPress={logout} />

@@ -27,6 +27,13 @@
         {
           "locationWhenInUsePermission": "TooGood Piante usa la tua posizione per mostrarti i negozi più vicini."
         }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "TooGood Piante usa la fotocamera per leggere il codice QR del cliente al ritiro.",
+          "recordAudioAndroid": false
+        }
       ]
     ],
     "scheme": "toogood"

@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-04 – **giorno 9 scritto e provato (logica e API); schermate non ancora provate su telefono**. Giorni 1–8 in `main` (PR #7–#16); il giorno 9 è sul branch `mich` (pubblicato il 2026-11-05, senza PR ancora). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-05 – **giorno 10 completato lato server e provato; schermate di QR e scansione non ancora provate su telefono**. Giorni 1–9 in `main` (PR #7–#17); il giorno 10 è sul branch locale `giorno-10-qr-ritiro` (**non pubblicato**, nessun push). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -14,11 +14,13 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 9 scritto e provato (logica e API)
   - [Giorno 7 – ricerca e scheda negozio](docs/scelte/giorno-7-ricerca.md)
   - [Giorno 8 – ordini, stock riservato e pagamenti](docs/scelte/giorno-8-ordini.md)
   - [Giorno 9 – app cliente: carrello, pagamento e storico](docs/scelte/giorno-9-app-ordini.md)
+  - [Giorno 10 – QR di ritiro](docs/scelte/giorno-10-qr-ritiro.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
 - Endpoint delle box e formula del prezzo: [docs/API-box.md](docs/API-box.md)
 - Endpoint di ricerca e scheda dei negozi (pubblici): [docs/API-negozi.md](docs/API-negozi.md)
 - Endpoint degli ordini, dei pagamenti e del webhook Stripe: [docs/API-ordini.md](docs/API-ordini.md)
+- Endpoint del ritiro con QR (biglietto, scansione, ordini del giorno): [docs/API-ritiro.md](docs/API-ritiro.md)
 
 ## Fatto
 **Giorno 1:** stack Docker con servizi simulati, Laravel 13, schema del database, dati fissi, `Clock` simulato.
@@ -108,6 +110,18 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 9 scritto e provato (logica e API)
 - Limiti noti: la **carta vera** non c'è (servirebbe il modulo di Stripe, chiavi di test e una build dedicata: con Expo Go non basta): in app c'è solo il pagamento di prova, e con un server non in modalità prova l'app lo dice e non mostra il pulsante; il QR di ritiro è il giorno 10 (la schermata dell'ordine lo annuncia); il carrello si perde se si chiude l'app.
 - Per provare servono un negozio approvato, con conto collegato e una box di oggi, e un account **cliente**: vedi [docs/AVVIO.md](docs/AVVIO.md).
 
+**Giorno 10 – QR di ritiro, scansione e stati dell'ordine** (endpoint: [docs/API-ritiro.md](docs/API-ritiro.md)):
+- **Biglietto:** ogni ordine pagato ha un **QR firmato** (solo numero d'ordine e identificativo casuale, firmati con HMAC: nessun dato personale) e un **codice alternativo** `ABCD-EFGH` (senza 0 O 1 I L). Nasce al pagamento, valido **solo nella fascia di ritiro del giorno** (estremi inclusi) e **monouso**. Il codice è anche nell'email di conferma. `GET /orders/{id}/pickup` lo restituisce al cliente.
+- **Scansione:** `POST /seller/pickup/scan` con `{qr}` o `{code}` (minuscole e spazi non contano). Esiti spiegati: `INVALID_QR`, `INVALID_CODE`, `WRONG_SHOP`, `ALREADY_USED` (con l'ora), `NOT_YET_VALID` (con l'ora di inizio), `EXPIRED`, `ORDER_NOT_ACTIVE`. Se riesce l'ordine diventa `PICKED_UP` con data e ora. **Una sola scansione passa** anche con richieste simultanee (provato dal vivo: 16 insieme → 1 riuscita, 15 rifiutate, nessun errore). Un venditore sospeso ritira comunque gli ordini già pagati.
+- **Ordini del giorno:** `GET /seller/orders` con riepilogo (da ritirare, ritirati, non ritirati) e, per ogni ordine, **solo il nome utente** del cliente.
+- **Fine fascia:** comando `orders:close-pickup` ogni minuto → `NOT_PICKED_UP` (nessun rimborso). Chiude solo *dopo* la fine della fascia, coerente con la scansione.
+- **App cliente:** nel dettaglio di un ordine pagato compare il **QR** (con `react-native-qrcode-svg`), il codice alternativo e lo stato (non ancora iniziato / in corso / finito / ritirato). Il biglietto si **salva sul telefono** appena caricato e si vede anche senza rete; lo stato si ricalcola sul telefono.
+- **App venditore:** nella home la scheda **Ritiri di oggi** (conteggi e ordini con stato) e **Scansiona il QR** (fotocamera con `expo-camera`, oppure codice scritto a mano); l'esito è verde ("Ritiro confermato") o rosso con il motivo.
+- Nuovi: `PickupToken`, `PickupService`, `PickupController`, `SellerOrderController`, `CloseExpiredPickups`; `src/qrStore.js`, `src/screens/PickupScreens.js`; librerie `expo-camera`, `react-native-svg`, `react-native-qrcode-svg` (permesso fotocamera nell'`app.json`: **dopo il pull serve `npm install` in `apps/mobile`**). **Nessuna migrazione** (la tabella `pickup_tokens` c'era dal giorno 1).
+- Test: **232 su 232** backend (20 nuovi: biglietto, firma falsificata, bordi della fascia, doppia scansione, altro negozio, ordini del giorno, privacy, fine fascia) e **42 su 42** dell'app (5 nuovi). Provato dal vivo con negozio e clienti di prova: QR falso rifiutato, altro negozio rifiutato, **16 scansioni simultanee → 1 sola riuscita**, ritiro con codice scritto male (minuscole e spazi), ordini del giorno, chiusura di fine fascia con l'orologio simulato. Bundle Android ok. **Le schermate (QR e fotocamera) non sono state provate su telefono.**
+- **Attenzione, effetto collaterale dell'orologio simulato:** `clock advance` vale per tutto il database di sviluppo. Durante la prova ha chiuso come "non ritirato" anche un tuo ordine reale di prova (#23, "Vivaio Notte"), che ho **rimesso a `PAID`**. Dopo ogni prova con `clock advance` conviene controllare gli ordini (vedi [docs/AVVIO.md](docs/AVVIO.md)).
+- Limiti noti: il QR vale per il giorno dell'ordine; nessun annullamento di una scansione sbagliata; il payout al venditore è il giorno 11; la scansione con la fotocamera non è provata su dispositivo.
+
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
 - Una P.IVA inesistente è rifiutata; se il servizio di verifica è giù il profilo si salva con controllo "non verificato" e decide l'admin.
@@ -119,8 +133,8 @@ Ultimo aggiornamento: 2026-11-04 – **giorno 9 scritto e provato (logica e API)
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 10 – QR di ritiro, scansione e stati dell'ordine
-QR monouso e firmato, valido solo nel giorno e nella fascia di ritiro, con codice alfanumerico alternativo (token e `pickup_tokens` esistono già nello schema); schermata del cliente con il QR (salvato localmente, anche con connessione debole); scansione con la **fotocamera del venditore** (nuovo permesso e libreria nell'app); stati ritirato / non ritirato (job a fine fascia); elenco degli ordini del giorno per il venditore. L'email di conferma e la schermata dell'ordine promettono già il QR. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene **provare a mano il giro d'acquisto sul telefono** (vedi AVVIO.md).
+## Prossimo: giorno 11 – payout ritardato, riepilogo incassi
+Pagamento al venditore **24 ore dopo la fine della fascia di ritiro** (sia per gli ordini ritirati sia per quelli non ritirati): importo `max(0, prezzo − tariffa)` per box, trasferimento Stripe Connect (con `stripe-mock`: simulato), stato `SCHEDULED/PAID/SKIPPED`, importo 0 → saltato; riepilogo incassi del venditore (ordini, tariffe trattenute, trasferito, in attesa, sospeso) e ordini del giorno già c'è. Tabella `payouts` già nello schema; la fine fascia ora è marcata da `orders:close-pickup`. Il reclamo aperto sospenderà il payout (giorno 12). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md). Prima conviene **provare a mano QR e scansione sul telefono** (vedi AVVIO.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -132,7 +146,7 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è sul branch `mich` (da `giorno-9-app-ordini`, creato da `main`), pubblicato il 2026-11-05, **senza pull request ancora**.
+- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è in `main` (PR #17). Il giorno 10 è sul branch locale `giorno-10-qr-ritiro`, creato da `main`: **non pubblicato** (nessun push, nessuna PR) su richiesta.
 - Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.

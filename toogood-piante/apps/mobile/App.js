@@ -12,6 +12,7 @@ import {
 import { AdminHome, ChangePasswordScreen } from './src/screens/HomeScreens';
 import { BoxFormScreen } from './src/screens/BoxScreens';
 import { CartScreen, CheckoutScreen, OrderScreen, OrdersScreen } from './src/screens/OrderScreens';
+import { ScanScreen } from './src/screens/PickupScreens';
 import { SellerHome, SellerProfileScreen } from './src/screens/SellerScreens';
 import { ShopScreen, ShopsScreen } from './src/screens/ShopScreens';
 import { clearPendingBox, loadPendingBox } from './src/pendingBox';
@@ -83,6 +84,7 @@ function Routes({ navReady }) {
             <>
               <Stack.Screen name="SellerProfile" component={SellerProfileScreen} options={{ title: '' }} />
               <Stack.Screen name="BoxForm" component={BoxFormScreen} options={{ title: '' }} />
+              <Stack.Screen name="Scan" component={ScanScreen} options={{ title: '' }} />
             </>
           ) : null}
         </>

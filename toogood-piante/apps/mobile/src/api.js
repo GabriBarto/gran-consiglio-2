@@ -106,6 +106,11 @@ export const api = {
   // Solo sviluppo (stripe-mock non ha carte): l'API lo accetta solo se il pagamento è simulato
   simulatePayment: (id, outcome = 'succeeded') => request('POST', `/orders/${id}/simulate-payment`, { outcome }),
 
+  // Ritiro con QR: il biglietto del cliente, gli ordini del giorno del venditore e la scansione
+  pickupTicket: (orderId) => request('GET', `/orders/${orderId}/pickup`),
+  sellerOrders: () => request('GET', '/seller/orders'),
+  scanPickup: (body) => request('POST', '/seller/pickup/scan', body), // { qr } oppure { code }
+
   // Box del giorno
   boxOptions: () => request('GET', '/seller/box-options'),
   boxes: () => request('GET', '/seller/boxes'),

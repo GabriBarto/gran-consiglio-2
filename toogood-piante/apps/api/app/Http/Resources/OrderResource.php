@@ -54,6 +54,7 @@ final class OrderResource
             'pickup_window_end_at' => $order->pickup_window_end_at->toIso8601String(),
             'reserved_until' => $reservedUntil?->toIso8601String(),
             'paid_at' => $order->paid_at?->toIso8601String(),
+            'picked_up_at' => $order->picked_up_at?->toIso8601String(),
         ];
     }
 }
