@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Le box tenute da parte per un ordine non pagato tornano disponibili alla scadenza (10 minuti)
 Schedule::command('reservations:release')->everyMinute()->withoutOverlapping();
+
+// A fine fascia di ritiro gli ordini pagati e mai scansionati diventano "non ritirati"
+Schedule::command('orders:close-pickup')->everyMinute()->withoutOverlapping();

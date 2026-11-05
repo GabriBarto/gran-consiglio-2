@@ -17,7 +17,7 @@ carrello (nell'app)
    pagamento arrivato quando l'ordine era già EXPIRED o PAYMENT_FAILED ──▶ REFUNDED_FULL (rimborso automatico + email)
 ```
 
-Il **carrello vive nell'app**: al server arriva soltanto al momento del checkout, e viene sempre ricontrollato (stock, prezzo e orario possono essere cambiati). Gli stati successivi (ritirato, reclami, rimborsi parziali) arrivano nei giorni 10–12.
+Il **carrello vive nell'app**: al server arriva soltanto al momento del checkout, e viene sempre ricontrollato (stock, prezzo e orario possono essere cambiati). Dal giorno 10 un ordine pagato può diventare `PICKED_UP` (scansione del QR) o `NOT_PICKED_UP` (fascia finita): [API-ritiro.md](API-ritiro.md). Reclami e rimborsi parziali arrivano nel giorno 12.
 
 ## Endpoint
 
@@ -47,7 +47,7 @@ L'app completa il pagamento **direttamente con Stripe** usando `client_secret` (
 
 ### L'ordine
 
-`id`, `number` (es. `TG-000042`), `status`, `order_date`, `total_cents`, `min_saving_cents` (risparmio minimo complessivo), `items [ { box_id, box_type, category, description, quantity, unit_price_cents, line_total_cents, min_saving_cents } ]`, `shop { id, business_name, address, city, pickup_from, pickup_to }`, `pickup_window_end_at`, `reserved_until` (finché è in attesa: fino a quando le box restano tenute da parte), `paid_at`.
+`id`, `number` (es. `TG-000042`), `status`, `order_date`, `total_cents`, `min_saving_cents` (risparmio minimo complessivo), `items [ { box_id, box_type, category, description, quantity, unit_price_cents, line_total_cents, min_saving_cents } ]`, `shop { id, business_name, address, city, pickup_from, pickup_to }`, `pickup_window_end_at`, `reserved_until` (finché è in attesa: fino a quando le box restano tenute da parte), `paid_at`, `picked_up_at`.
 La tariffa di servizio e i dati riservati del venditore non compaiono mai.
 
 ## Cosa controlla il checkout (e con quale errore)
@@ -110,5 +110,5 @@ Il controllo e il calo dello stock sono un passo unico: le righe delle box si bl
 
 ## Limiti noti
 
-- Il **QR di ritiro** e il **pagamento al venditore** non ci sono ancora (giorni 10 e 11); la conferma lo promette già nell'email.
+- Il **pagamento al venditore** non c'è ancora (giorno 11). Il QR di ritiro c'è dal giorno 10: vedi [API-ritiro.md](API-ritiro.md).
 - Con Stripe vero (non il simulatore) servono le chiavi di test, `STRIPE_API_BASE` vuoto, `STRIPE_PUBLISHABLE_KEY` e il profilo `stripe` di Docker per inoltrare i webhook.

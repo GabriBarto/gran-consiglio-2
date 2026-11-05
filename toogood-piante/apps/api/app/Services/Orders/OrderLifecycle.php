@@ -23,6 +23,7 @@ class OrderLifecycle
         private readonly Clock $clock,
         private readonly PaymentService $payments,
         private readonly OrderNotifier $notifier,
+        private readonly PickupService $pickup,
     ) {}
 
     /**
@@ -95,6 +96,8 @@ class OrderLifecycle
                 $order->status = Order::PAID;
                 $order->paid_at = $this->clock->now();
                 $order->save();
+                // QR e codice di ritiro: pronti già per l'email di conferma
+                $this->pickup->issue($order);
 
                 return [$order, 'paid'];
             }

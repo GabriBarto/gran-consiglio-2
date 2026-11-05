@@ -19,7 +19,7 @@ class OrderNotifier
     /** Conferma al cliente (US-C08) e avviso di nuovo ordine al venditore (US-V12). */
     public function orderPaid(Order $order): void
     {
-        $order->load(['items.box', 'seller.user', 'customer']);
+        $order->load(['items.box', 'seller.user', 'customer', 'pickupToken']);
 
         $this->send(fn () => Mail::to($order->customer->email)->send(new OrderConfirmationMail($order)), $order, 'conferma al cliente');
         $this->send(fn () => Mail::to($order->seller->user->email)->send(new NewOrderMail($order)), $order, 'avviso al venditore');

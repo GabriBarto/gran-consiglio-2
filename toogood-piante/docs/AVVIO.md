@@ -155,6 +155,23 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
 
+### Prova il ritiro con il QR (giorno 10)
+
+Serve un ordine **pagato** (vedi "Prova l'acquisto dall'app") e **due telefoni** (uno per il cliente, uno per il venditore), oppure un solo telefono con un account alla volta. Dopo il pull: `cd apps/mobile && npm install` (nuove librerie per QR e fotocamera) e poi `npx expo start --clear`. L'app chiederà il **permesso della fotocamera** al venditore.
+
+1. **Cliente:** apri l'ordine pagato (I miei ordini → l'ordine): compare il **codice di ritiro** con il QR grande e il codice `ABCD-EFGH`. Sotto, un messaggio dice se il ritiro è **non ancora iniziato**, **in corso** o **finito** secondo la fascia del negozio. Il codice è anche nell'email di conferma (Mailpit).
+2. **Venditore:** nella home, scheda **Ritiri di oggi**: vedi gli ordini del giorno con lo stato ("Pagato" = da ritirare). Tocca **Scansiona il QR di un cliente** e inquadra il QR dell'altro telefono. Esito **verde** "Ritiro confermato ✓" (ordine, cliente, box, ora) oppure **rosso** con il motivo.
+3. **Controlla:** l'ordine del cliente passa a **Ritirato** e la scheda del venditore aggiorna i conteggi.
+4. **Alternativa senza fotocamera:** nella schermata di scansione scrivi il codice a mano (anche in minuscolo, con spazi o trattino) e tocca **Conferma il ritiro**.
+
+Cose da provare:
+- **Doppio ritiro:** scansiona di nuovo lo stesso QR → rosso, "già usato alle HH:MM".
+- **Altro negozio:** scansiona il QR con un venditore diverso → "Questo ordine è di un altro negozio".
+- **Fuori fascia:** con un negozio il cui ritiro non è ancora iniziato → "non ancora iniziato, inizia alle HH:MM"; a fascia finita → "fascia finita".
+- **Senza rete:** apri l'ordine del cliente una volta, poi metti il telefono in modalità aereo e riaprilo: il QR si vede ancora ("copia salvata sul telefono").
+- **Non ritirato (fine fascia):** dal PC `docker compose exec php php artisan clock advance 6h`, poi `docker compose exec php php artisan orders:close-pickup`, poi `docker compose exec php php artisan clock reset`. L'ordine non scansionato diventa **Non ritirato**.
+  - **Attenzione:** l'orologio simulato è unico per tutto il database di sviluppo, quindi il comando chiude **anche i tuoi altri ordini pagati** la cui fascia, nel tempo simulato, risulta finita, e restano "Non ritirato" anche dopo `clock reset`. Dopo la prova controlla gli ordini; per rimetterne uno a "Pagato": `docker compose exec php php artisan tinker --execute="App\Models\Order::whereKey(ID)->update(['status'=>'PAID']);"`.
+
 ### Prova l'acquisto dall'app (giorno 9)
 
 Serve un negozio **approvato, con il conto collegato e una box di oggi** (vedi "Prova le box") e un account **cliente** (registrato dall'app, con l'email confermata). Il pagamento è **di prova**: non serve nessuna carta.

@@ -1,24 +1,93 @@
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import QRCode from 'react-native-qrcode-svg';
 import { api } from '../api';
 import { toOrderPayload } from '../cart';
 import { useCart } from '../CartContext';
 import { errorMessage } from '../errors';
-import { formatCountdown, formatDate, localTimeOf, paymentOutcomeText, shortageLines, statusInfo, timeOf } from '../orders';
+import { formatCountdown, formatDate, localTimeOf, paymentOutcomeText, shortageLines, statusInfo, ticketMessage, timeOf } from '../orders';
+import { loadTicket, saveTicket } from '../qrStore';
 import { formatEuro } from '../pricing';
 import { useAction } from '../useAction';
 import { Button, Card, colors, ErrorText, Hint, LinkText, Screen, Stepper, Title } from '../ui';
 
 const TONE = { ok: colors.green, warn: '#9a6b00', bad: colors.error, muted: colors.muted };
 
-function StatusBadge({ status }) {
+export function StatusBadge({ status }) {
   const { label, tone } = statusInfo(status);
 
   return (
     <View style={{ alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: TONE[tone] }}>
       <Text style={{ color: TONE[tone], fontWeight: '700' }}>{label}</Text>
     </View>
+  );
+}
+
+// Il biglietto di ritiro (US-C09): QR e codice alternativo da mostrare al negozio nella fascia di ritiro.
+// Una volta caricato si salva sul telefono, così si vede anche senza rete.
+function PickupTicket({ order }) {
+  const [ticket, setTicket] = useState(null);
+  const [saved, setSaved] = useState(false); // mostrato dalla copia salvata perché la rete non risponde
+  const [failed, setFailed] = useState(false);
+  const [now, setNow] = useState(Date.now());
+
+  const load = useCallback(async () => {
+    setFailed(false);
+    try {
+      const fresh = await api.pickupTicket(order.id);
+      await saveTicket(order.id, fresh);
+      setTicket(fresh);
+      setSaved(false);
+    } catch {
+      const copy = await loadTicket(order.id);
+      setTicket(copy);
+      setSaved(copy !== null);
+      setFailed(copy === null);
+    }
+  }, [order.id, order.status]);
+
+  useEffect(() => { load(); }, [load]);
+
+  // Lo stato (non ancora iniziato / in corso / finito) si aggiorna da solo mentre la schermata è aperta
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 15000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  if (!ticket) {
+    return (
+      <Card>
+        <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 6 }}>Codice di ritiro</Text>
+        {failed ? (
+          <>
+            <Hint>Non riesco a caricare il codice di ritiro. Controlla la connessione e riprova: una volta caricato resta salvato sul telefono.</Hint>
+            <Button title="Riprova" onPress={load} />
+          </>
+        ) : <ActivityIndicator color={colors.green} />}
+      </Card>
+    );
+  }
+
+  const info = ticketMessage(ticket, now);
+  const dimmed = info.state === 'USED' || info.state === 'EXPIRED';
+
+  return (
+    <Card>
+      <Text style={{ fontSize: 17, fontWeight: '700', color: colors.text, marginBottom: 10 }}>Codice di ritiro</Text>
+
+      <View style={{ alignItems: 'center', opacity: dimmed ? 0.3 : 1 }}>
+        <View style={{ backgroundColor: '#fff', padding: 14, borderRadius: 10, borderWidth: 1, borderColor: colors.border }}>
+          <QRCode value={ticket.qr} size={210} ecl="M" />
+        </View>
+        <Text style={{ fontSize: 26, fontWeight: '700', letterSpacing: 4, color: colors.text, marginTop: 12 }}>{ticket.code}</Text>
+        <Text style={{ color: colors.muted, marginTop: 2 }}>se la fotocamera non basta, detta questo codice al negozio</Text>
+      </View>
+
+      <Text style={{ color: TONE[info.tone], fontWeight: '600', marginTop: 12 }}>{info.text}</Text>
+      {saved ? <Text style={{ color: colors.muted, marginTop: 6 }}>Senza connessione: mostro la copia salvata sul telefono.</Text> : null}
+    </Card>
   );
 }
 
@@ -333,13 +402,19 @@ export function OrderScreen({ route, navigation }) {
         </Card>
       ) : null}
 
+      {order.status === 'PAID' || order.status === 'PICKED_UP' ? <PickupTicket order={order} /> : null}
       {order.status === 'PAID' ? (
-        <>
-          <Hint>Per ritirare l’ordine ti servirà il codice QR: sarà disponibile qui, in questa schermata, a breve.</Hint>
-          <Text style={{ color: colors.error, fontWeight: '600', marginBottom: 12 }}>
-            Promemoria: se non ritiri l’ordine nella fascia indicata non è previsto alcun rimborso.
-          </Text>
-        </>
+        <Text style={{ color: colors.error, fontWeight: '600', marginBottom: 12 }}>
+          Promemoria: se non ritiri l’ordine nella fascia indicata non è previsto alcun rimborso.
+        </Text>
+      ) : null}
+      {order.status === 'PICKED_UP' ? (
+        <Text style={{ color: colors.green, fontWeight: '600', marginBottom: 12 }}>Ordine ritirato alle {localTimeOf(order.picked_up_at)}. Buon verde!</Text>
+      ) : null}
+      {order.status === 'NOT_PICKED_UP' ? (
+        <Text style={{ color: colors.error, fontWeight: '600', marginBottom: 12 }}>
+          Non hai ritirato l’ordine nella fascia indicata ({order.shop.pickup_from}–{order.shop.pickup_to}): come previsto, non c’è rimborso.
+        </Text>
       ) : null}
       {order.status === 'REFUNDED_FULL' ? <Hint>Questo ordine è stato rimborsato per intero.</Hint> : null}
 
