@@ -67,4 +67,9 @@ export const api = {
   sellerDocument: (id, docId) => request('GET', `/admin/sellers/${id}/documents/${docId}`, undefined, true),
   approve: (id) => request('POST', `/admin/sellers/${id}/approve`),
   reject: (id, note) => request('POST', `/admin/sellers/${id}/reject`, { note }),
+
+  // Reclami e rimborsi (giorno 12): status è OPEN (da decidere) o DECIDED
+  complaints: (status) => request('GET', `/admin/complaints?status=${status}`),
+  complaint: (id) => request('GET', `/admin/complaints/${id}`),
+  decide: (id, body) => request('POST', `/admin/complaints/${id}/decide`, body),
 };

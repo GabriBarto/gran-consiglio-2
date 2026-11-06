@@ -91,3 +91,7 @@ dl { margin: 0; }
 
 .actions { margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .actions label { flex-basis: 100%; }
+
+.nav { padding: 12px 24px 0; margin-bottom: 0; }
+.choices { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.quote { white-space: pre-wrap; }

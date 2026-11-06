@@ -3,6 +3,7 @@ import { useAuth } from './auth.jsx';
 import { errorMessage } from './errors.js';
 import { api } from './api.js';
 import Verifiche from './Verifiche.jsx';
+import Reclami from './Reclami.jsx';
 
 // Esegue un'azione asincrona con stato "in corso" ed errore tradotto.
 function useAction() {
@@ -107,6 +108,8 @@ function ChangePassword() {
 export default function App() {
   const { user, booting, logout } = useAuth();
   const [challenge, setChallenge] = useState(null);
+  const [page, setPage] = useState('verifiche');
+  const [openComplaints, setOpenComplaints] = useState(null);
 
   if (booting) return <main className="center"><p className="hint">Caricamento…</p></main>;
   if (!user) {
@@ -122,7 +125,13 @@ export default function App() {
         <strong>TooGood Piante · Amministrazione</strong>
         <span>{user.email} <button className="link" onClick={logout}>Esci</button></span>
       </header>
-      <Verifiche />
+      <nav className="tabs nav" aria-label="Sezioni">
+        <button className={page === 'verifiche' ? 'tab active' : 'tab'} onClick={() => setPage('verifiche')}>Verifiche venditori</button>
+        <button className={page === 'reclami' ? 'tab active' : 'tab'} onClick={() => setPage('reclami')}>
+          Reclami{openComplaints ? ` (${openComplaints})` : ''}
+        </button>
+      </nav>
+      {page === 'verifiche' ? <Verifiche /> : <Reclami onOpenCount={setOpenComplaints} />}
     </>
   );
 }
