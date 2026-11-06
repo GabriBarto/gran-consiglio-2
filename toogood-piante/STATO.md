@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-06 – **giorno 12 completato** (recensioni, reclami e rimborsi: server, pannello admin e app; **non provato su telefono né con `stripe-mock`**, vedi sotto). Giorni 1–11 in `main` (PR #7–#19); il giorno 12 è sul branch `claude/wizardly-ritchie-vngwec`, senza pull request. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-06 – **giorno 13 scritto e provato con i test** (sospensione venditori, limiti, casi limite, dati demo; **non provato su telefono, nel browser né con il test di concorrenza**, vedi sotto). Giorni 1–12 in `main` (PR #7–#20); il giorno 13 è sul branch `andres`, senza pull request. Il giorno 12 è ancora **da provare su telefono e con `stripe-mock`**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -17,6 +17,7 @@ Ultimo aggiornamento: 2026-11-06 – **giorno 12 completato** (recensioni, recla
   - [Giorno 10 – QR di ritiro](docs/scelte/giorno-10-qr-ritiro.md)
   - [Giorno 11 – payout ritardato e incassi](docs/scelte/giorno-11-payout.md)
   - [Giorno 12 – recensioni, reclami e rimborsi](docs/scelte/giorno-12-reclami.md)
+  - [Giorno 13 – rifinitura: sospensione, casi limite, dati demo](docs/scelte/giorno-13-rifinitura.md)
 - Endpoint di autenticazione: [docs/API-auth.md](docs/API-auth.md)
 - Endpoint del venditore e della verifica admin: [docs/API-venditore.md](docs/API-venditore.md)
 - Endpoint delle box e formula del prezzo: [docs/API-box.md](docs/API-box.md)
@@ -148,6 +149,16 @@ Ultimo aggiornamento: 2026-11-06 – **giorno 12 completato** (recensioni, recla
 - **Non provato:** le nuove schermate dell'app **su telefono**; il rimborso e lo storno **con `stripe-mock`** (nei test Stripe è un doppio; i metodi `refunds->create` con importo e `transfers->createReversal` sono quelli dell'SDK, ma mai eseguiti davvero); il pannello admin **contro l'API viva**. Da fare prima di andare avanti.
 - Limiti noti: niente foto nei reclami (R4); nessuna moderazione o segnalazione delle recensioni (R4); i reclami ripetuti non sospendono ancora il venditore (giorno 13); se lo storno di un trasferimento già inviato fallisce (saldo del venditore insufficiente) la decisione resta bloccata finché non si risolve; nessun audit log generale (restano `decided_by` e `decided_at` sul reclamo); chiamata a Stripe con le righe bloccate (come i payout).
 
+**Giorno 13 – rifinitura** (sospensione: [docs/API-venditore.md](docs/API-venditore.md); dati demo: [docs/AVVIO.md](docs/AVVIO.md)):
+- **Sospensione venditori** (US-S03): `POST /admin/sellers/{id}/suspend` (motivo obbligatorio) e `/reactivate`, con email al venditore. Da sospeso: fuori dalla ricerca, niente box né nuovi ordini; gli ordini già pagati si ritirano e i payout seguono le regole di sempre. Nessuna migrazione (lo stato `SUSPENDED` c'era già).
+- **Reclami ripetuti** (US-V18 CA1): 3 reclami accolti in 30 giorni sospendono il venditore da soli (parametri `suspend_after_complaints` e `suspend_window_days`; `0` = mai). Alla decisione l'admin può anche spuntare "sospendi anche il venditore" (US-S05 CA2). **Per avere i parametri nel database di sviluppo: `php artisan db:seed --class=CatalogSeeder`** (senza, valgono 3 e 30).
+- **Pannello admin:** **Sospendi…** e **Riattiva** nella scheda del venditore, casella di sospensione nella decisione dei reclami. **App venditore:** da sospeso vede il motivo.
+- **Limiti:** tetto di 120 richieste al minuto per utente autenticato (`throttle:api`), oltre ai limiti già presenti.
+- **Casi limite con test:** cambio di ora legale (29 marzo e 25 ottobre) per biglietto di ritiro e orario limite; fascia di ritiro più corta di 2 ore.
+- **Dati demo:** `php artisan db:seed --class=DemoSeeder` crea 2 clienti, 3 negozi approvati con box di oggi e 1 sospeso (password `Demo-Password1`); rilanciabile ogni mattina.
+- Test: **314 su 314** backend (22 nuovi: sospensione, soglia automatica, ora legale, fasce corte, seeder demo). **Pannello admin e app non compilati né provati** (su questo PC mancavano `node_modules`): fare `npm install` e `npm run build` in `apps/admin`, `npm test` in `apps/mobile`.
+- **Non fatto:** nessun nuovo test di concorrenza (quelli veri sono stati fatti a mano ai giorni 8 e 10: PHPUnit non può simulare richieste parallele); nessuna sospensione dei clienti (US-S04, fuori MVP).
+
 ## Scelte da sapere
 - Il profilo dell'attività si invia **dopo** la registrazione e dopo l'accesso, non nel modulo di registrazione.
 - Una P.IVA inesistente è rifiutata; se il servizio di verifica è giù il profilo si salva con controllo "non verificato" e decide l'admin.
@@ -159,8 +170,8 @@ Ultimo aggiornamento: 2026-11-06 – **giorno 12 completato** (recensioni, recla
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 13 – rifinitura
-Sospensione dei venditori (anche per reclami ripetuti, US-V18 CA1), limiti di accesso, casi limite (pagamento tardivo, doppia scansione, ora legale), dati di prova per la demo e test di concorrenza. Prima, **provare il giorno 12 su telefono e con `stripe-mock`** (vedi sopra). Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+## Prossimo: giorno 14 – cuscinetto
+Prima di tutto **provare i giorni 12 e 13**: giorno 12 su telefono e con `stripe-mock` (rimborso e storno mai eseguiti davvero), giorno 13 nel pannello admin (Sospendi/Riattiva, casella nei reclami) e nell'app del venditore sospeso; ripetere a mano la prova di concorrenza (acquisti e scansioni simultanei). Poi correggere i difetti, scrivere il copione della demo e aggiornare il README. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
@@ -172,8 +183,8 @@ Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
 6. Email inviate dall'app: http://localhost:8025
 
 ## Note
-- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è in `main` (PR #17). Il giorno 10 è in `main` (PR #18). Il giorno 11 è in `main` (PR #19). Il giorno 12 è sul branch `claude/wizardly-ritchie-vngwec` (creato da `main`), senza pull request.
-- Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova arrivano al giorno 13: per ora si registrano dall'app.
+- Git: i giorni 1–6 sono in `main` (PR #7, #8, #9, #10, #11, #13; la #12 è stata chiusa senza unire e sostituita dalla #13). Il giorno 7 è in `main` (PR #15). Il giorno 8 è in `main` (PR #16). Il giorno 9 è in `main` (PR #17). Il giorno 10 è in `main` (PR #18). Il giorno 11 è in `main` (PR #19). Il giorno 12 è in `main` (PR #20). Il giorno 13 è sul branch `andres`, senza pull request.
+- Utenti: dopo `migrate:fresh --seed` esiste solo l'admin (`admin@toogood.test`, password iniziale in `apps/api/.env.example`, da cambiare al primo accesso). Clienti e venditori di prova: `php artisan db:seed --class=DemoSeeder` (vedi [docs/AVVIO.md](docs/AVVIO.md)).
 - Le email (conferma, codice 2FA, reset) si leggono in Mailpit: http://localhost:8025.
 - `apps/mobile/AGENTS.md` (generato dal template Expo) suggerisce Expo Router; l'app usa invece React Navigation.
 - `apps/api/.env` non è nel repository: si crea da `.env.example` (vedi README).

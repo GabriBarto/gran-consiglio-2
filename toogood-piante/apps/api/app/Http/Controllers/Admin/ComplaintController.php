@@ -45,9 +45,11 @@ class ComplaintController extends Controller
             'refund_cents' => ['required_if:decision,ACCEPT_PARTIAL', 'nullable', 'integer', 'min:1'],
             // Il motivo arriva a cliente e venditore per email
             'note' => ['required', 'string', 'min:5', 'max:1000'],
+            // Sospende anche il venditore (US-S05 CA2)
+            'suspend_seller' => ['nullable', 'boolean'],
         ]);
 
-        $decided = $complaints->decide($request->user(), $complaint, $data['decision'], $data['refund_cents'] ?? null, trim($data['note']));
+        $decided = $complaints->decide($request->user(), $complaint, $data['decision'], $data['refund_cents'] ?? null, trim($data['note']), (bool) ($data['suspend_seller'] ?? false));
 
         return response()->json(ComplaintResource::forAdmin($decided->fresh()));
     }

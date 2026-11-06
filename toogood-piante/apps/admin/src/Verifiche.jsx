@@ -89,6 +89,7 @@ function Detail({ id, onDecided }) {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [rejecting, setRejecting] = useState(false);
+  const [suspending, setSuspending] = useState(false);
   const [note, setNote] = useState('');
 
   useEffect(() => {
@@ -137,7 +138,7 @@ function Detail({ id, onDecided }) {
         <Row label="Fascia di ritiro">{s.pickup_from}–{s.pickup_to}</Row>
         <Row label="Conto di pagamento">{data.stripe_connected ? 'Collegato' : 'Non ancora collegato'}</Row>
         <Row label="Inviata">{formatDate(data.submitted_at)}</Row>
-        {data.verification_note ? <Row label="Motivo del rifiuto">{data.verification_note}</Row> : null}
+        {data.verification_note && data.status === 'REJECTED' ? <Row label="Motivo del rifiuto">{data.verification_note}</Row> : null}
       </dl>
 
       <h3>Documenti</h3>
@@ -169,6 +170,26 @@ function Detail({ id, onDecided }) {
             <button className="danger-outline" disabled={busy} onClick={() => setRejecting(true)}>Rifiuta…</button>
           </div>
         )
+      ) : data.status === 'APPROVED' ? (
+        suspending ? (
+          <div className="actions">
+            <label>Motivo della sospensione (lo riceve il venditore per email)
+              <textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} autoFocus />
+            </label>
+            <p className="hint">Da sospeso non può pubblicare box né ricevere nuovi ordini; gli ordini già pagati si ritirano comunque.</p>
+            <button className="danger" disabled={busy || note.trim().length < 5} onClick={() => decide(() => api.suspend(id, note.trim()))}>Conferma la sospensione</button>
+            <button className="link" disabled={busy} onClick={() => setSuspending(false)}>Annulla</button>
+          </div>
+        ) : (
+          <div className="actions">
+            <button className="danger-outline" disabled={busy} onClick={() => setSuspending(true)}>Sospendi…</button>
+          </div>
+        )
+      ) : data.status === 'SUSPENDED' ? (
+        <div className="actions">
+          {data.verification_note ? <p className="warn">Motivo: {data.verification_note}</p> : null}
+          <button disabled={busy} onClick={() => decide(() => api.reactivate(id))}>Riattiva</button>
+        </div>
       ) : (
         <p className="hint">Questa richiesta è già stata decisa.</p>
       )}

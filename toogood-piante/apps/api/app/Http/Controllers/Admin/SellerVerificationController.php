@@ -7,6 +7,7 @@ use App\Http\Resources\SellerResource;
 use App\Mail\SellerVerificationMail;
 use App\Models\Seller;
 use App\Models\SellerDocument;
+use App\Services\Seller\SellerSuspension;
 use App\Support\ApiError;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -82,6 +83,23 @@ class SellerVerificationController extends Controller
         ])->save();
 
         Mail::to($seller->user->email)->send(new SellerVerificationMail($seller, false, $data['note']));
+
+        return response()->json(SellerResource::forAdmin($seller->load(['user', 'documents'])));
+    }
+
+    /** Sospende un venditore approvato (US-S03): niente nuove box né nuovi ordini, gli ordini pagati si ritirano. */
+    public function suspend(Request $request, Seller $seller, SellerSuspension $suspension): JsonResponse
+    {
+        $data = $request->validate(['note' => ['required', 'string', 'min:5', 'max:1000']]);
+
+        $suspension->suspend($seller, trim($data['note']));
+
+        return response()->json(SellerResource::forAdmin($seller->load(['user', 'documents'])));
+    }
+
+    public function reactivate(Seller $seller, SellerSuspension $suspension): JsonResponse
+    {
+        $suspension->reactivate($seller);
 
         return response()->json(SellerResource::forAdmin($seller->load(['user', 'documents'])));
     }

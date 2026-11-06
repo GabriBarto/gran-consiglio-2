@@ -9,7 +9,7 @@ Tutte le rotte richiedono un utente autenticato, attivo e con la password già c
 (nessun profilo)  = INCOMPLETE  (solo come risposta, non è salvato)
 PENDING ──approva──▶ APPROVED
    ▲  └────rifiuta──▶ REJECTED ──(reinvia)──▶ PENDING
-APPROVED ↔ SUSPENDED   (sospensione: giorno 13)
+APPROVED ↔ SUSPENDED   (sospensione e riattivazione dall'admin, o automatica per reclami ripetuti: giorno 13)
 ```
 
 `can_publish` è vero solo con stato `APPROVED` **e** conto Stripe collegato.
@@ -73,6 +73,17 @@ Se il servizio P.IVA è **non disponibile** (errore del servizio, non P.IVA sbag
 | POST | `/admin/sellers/{id}/reject` | Rifiuta. Body `{ "note": "..." }` obbligatorio (5–1000 caratteri). Invia l'email con il motivo. |
 
 Si decide solo su richieste `PENDING`; altrimenti 409 `INVALID_STATE`.
+
+### Sospensione e riattivazione (giorno 13)
+
+| Metodo | Percorso | Descrizione |
+|---|---|---|
+| POST | `/admin/sellers/{id}/suspend` | Sospende un venditore `APPROVED`. Body `{ "note": "..." }` obbligatorio (5–1000 caratteri): il motivo va nel campo `verification_note`, lo vede il venditore in app e lo riceve per email. |
+| POST | `/admin/sellers/{id}/reactivate` | Riattiva un venditore `SUSPENDED` (torna `APPROVED`, il motivo si cancella). Email al venditore. |
+
+Altro stato → 409 `INVALID_STATE`. Da sospeso: il negozio sparisce dalla ricerca (404 sulla scheda), non può creare né modificare box (403 `SELLER_NOT_READY`) e non riceve nuovi ordini (409 `SHOP_NOT_AVAILABLE`). Gli ordini **già pagati** si ritirano comunque e i loro payout seguono le regole di sempre (US-S03 CA2). Il venditore sospeso vede ancora Incassi, Ritiri, Recensioni e Reclami.
+
+**Sospensione automatica:** quando l'admin accoglie un reclamo (totale o parziale) e il venditore ne ha raggiunti `suspend_after_complaints` (3) negli ultimi `suspend_window_days` (30), viene sospeso da solo, con motivo e email. Sono parametri in `config_params`; `0` spegne la sospensione automatica. I reclami respinti non contano. Il venditore si riattiva solo a mano.
 
 ## Pagine web di ritorno da Stripe
 

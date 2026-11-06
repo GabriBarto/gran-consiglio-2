@@ -78,7 +78,8 @@ Il dettaglio contiene l'ordine (voci con prezzo pagato e **valore di listino dic
 ```
 { "decision": "ACCEPT_FULL" | "ACCEPT_PARTIAL" | "REJECT",
   "refund_cents": 200,            // solo ACCEPT_PARTIAL: da 1 a totale − 1, in centesimi
-  "note": "Motivazione…" }        // 5–1000 caratteri, arriva a cliente e venditore per email
+  "note": "Motivazione…",         // 5–1000 caratteri, arriva a cliente e venditore per email
+  "suspend_seller": true }        // facoltativo: sospende anche il venditore (US-S05 CA2); dopo 3 reclami accolti in 30 giorni scatta comunque da sola (vedi API-venditore.md)
 ```
 Errori: `409 INVALID_STATE` (già deciso), `422 INVALID_REFUND_AMOUNT`, `422` (campi mancanti), `502 PAYMENT_PROVIDER_ERROR` (Stripe non ha risposto: **nulla è stato salvato**, si può ripetere).
 

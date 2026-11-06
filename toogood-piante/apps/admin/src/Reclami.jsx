@@ -102,6 +102,7 @@ function Detail({ id, onDecided }) {
   const [decision, setDecision] = useState('');
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
+  const [suspendSeller, setSuspendSeller] = useState(false);
 
   useEffect(() => {
     api.complaint(id).then(setData).catch((e) => setError(errorMessage(e)));
@@ -123,6 +124,7 @@ function Detail({ id, onDecided }) {
       await api.decide(id, {
         decision,
         note: note.trim(),
+        ...(suspendSeller ? { suspend_seller: true } : {}),
         ...(decision === 'ACCEPT_PARTIAL' ? { refund_cents: refundCents } : {}),
       });
       onDecided();
@@ -204,6 +206,11 @@ function Detail({ id, onDecided }) {
               <label>Motivazione (la ricevono per email cliente e venditore)
                 <textarea rows={4} value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} />
               </label>
+              <label className="check">
+                <input type="checkbox" checked={suspendSeller} onChange={(e) => setSuspendSeller(e.target.checked)} />
+                {' '}Sospendi anche il venditore (non potrà più pubblicare box né ricevere ordini)
+              </label>
+              <p className="hint">Dopo 3 reclami accolti in 30 giorni la sospensione scatta da sola.</p>
             </>
           ) : null}
 
