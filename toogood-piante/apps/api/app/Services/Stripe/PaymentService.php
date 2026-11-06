@@ -54,4 +54,16 @@ class PaymentService
         // Con la stessa chiave Stripe restituisce lo stesso rimborso se il webhook viene ripetuto
         return $this->client()->refunds->create(['payment_intent' => $intentId], ['idempotency_key' => 'late-refund-'.$intentId])->id;
     }
+
+    /**
+     * Rimborso (anche parziale) deciso dall'admin su un reclamo. La chiave di idempotenza lega il rimborso al
+     * reclamo: se la decisione viene ripetuta dopo un errore, Stripe restituisce lo stesso rimborso.
+     */
+    public function refundAmount(string $intentId, int $cents, string $idempotencyKey): string
+    {
+        return $this->client()->refunds->create(
+            ['payment_intent' => $intentId, 'amount' => $cents, 'metadata' => ['reason' => 'complaint']],
+            ['idempotency_key' => $idempotencyKey],
+        )->id;
+    }
 }

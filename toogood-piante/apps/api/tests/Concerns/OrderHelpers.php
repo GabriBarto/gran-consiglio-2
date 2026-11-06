@@ -104,6 +104,9 @@ class FakePayments extends PaymentService
     /** @var list<string> */
     public array $refunded = [];
 
+    /** @var list<array{string, int, string}> intent, importo in centesimi, chiave di idempotenza (rimborsi da reclamo) */
+    public array $partialRefunds = [];
+
     public bool $failCreate = false;
 
     public bool $failRefund = false;
@@ -131,5 +134,15 @@ class FakePayments extends PaymentService
         $this->refunded[] = $intentId;
 
         return 're_test';
+    }
+
+    public function refundAmount(string $intentId, int $cents, string $idempotencyKey): string
+    {
+        if ($this->failRefund) {
+            throw new RuntimeException('Stripe non risponde');
+        }
+        $this->partialRefunds[] = [$intentId, $cents, $idempotencyKey];
+
+        return 're_complaint_'.count($this->partialRefunds);
     }
 }

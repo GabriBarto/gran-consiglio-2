@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Order;
+use App\Services\Complaints\ComplaintService;
 
 /** Come il cliente vede il proprio ordine. La tariffa di servizio è un dato del venditore e non compare. */
 final class OrderResource
@@ -10,7 +11,7 @@ final class OrderResource
     /** @return array<string, mixed> */
     public static function make(Order $order): array
     {
-        $order->loadMissing(['items.box', 'seller', 'reservations']);
+        $order->loadMissing(['items.box', 'seller', 'reservations', 'review', 'complaint', 'pickupToken']);
 
         $items = $order->items->map(function ($item) {
             $box = $item->box;
@@ -35,6 +36,9 @@ final class OrderResource
             ? $order->reservations->whereNull('released_at')->min('expires_at')
             : null;
 
+        // Recensione e reclamo (giorno 12): cosa può fare adesso il cliente, deciso dal server
+        $options = app(ComplaintService::class)->openNow($order);
+
         return [
             'id' => $order->id,
             'number' => $order->number(),
@@ -55,6 +59,13 @@ final class OrderResource
             'reserved_until' => $reservedUntil?->toIso8601String(),
             'paid_at' => $order->paid_at?->toIso8601String(),
             'picked_up_at' => $order->picked_up_at?->toIso8601String(),
+            'review' => $order->review ? ReviewResource::make($order->review) : null,
+            'can_review' => $order->picked_up_at !== null && ! $order->review,
+            'complaint' => $order->complaint ? ComplaintResource::forCustomer($order->complaint) : null,
+            'complaint_options' => [
+                'reasons' => array_map(fn (string $r) => ['code' => $r, 'label' => ComplaintResource::reasonLabel($r)], $options['reasons']),
+                'until' => $options['reasons'] ? $options['until']?->toIso8601String() : null,
+            ],
         ];
     }
 }

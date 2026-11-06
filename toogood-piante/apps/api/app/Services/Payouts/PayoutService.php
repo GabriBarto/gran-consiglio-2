@@ -60,7 +60,7 @@ class PayoutService
     /** Programma i payout degli ordini pagati che ancora non ne hanno (ordini precedenti a questa funzione). */
     public function scheduleMissing(): int
     {
-        $orders = Order::whereIn('status', [Order::PAID, Order::PICKED_UP, Order::NOT_PICKED_UP, 'IN_COMPLAINT'])
+        $orders = Order::whereIn('status', [Order::PAID, Order::PICKED_UP, Order::NOT_PICKED_UP, Order::IN_COMPLAINT, Order::REFUNDED_PARTIAL, Order::COMPLAINT_REJECTED])
             ->whereDoesntHave('payout')->get();
         foreach ($orders as $order) {
             $this->schedule($order);
@@ -99,7 +99,7 @@ class PayoutService
                 }
                 $order = Order::lockForUpdate()->with('seller')->findOrFail($payout->order_id);
 
-                if ($order->status === 'IN_COMPLAINT') {
+                if ($order->status === Order::IN_COMPLAINT) {
                     $payout->status = Payout::HELD;
                     $payout->save();
 

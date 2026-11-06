@@ -306,6 +306,7 @@ docker compose exec php php artisan migrate
 | Interfaccia web del database (Adminer, http://localhost:8081) | `docker compose --profile tools up -d` |
 | Orologio simulato: ora attuale / avanti di 24 ore / azzera | `docker compose exec php php artisan clock now` · `clock advance 24h` · `clock reset` |
 | Eseguire ora i pagamenti ai venditori scaduti | `docker compose exec php php artisan payouts:run` |
+| Reclami da decidere (admin web, scheda Reclami) | `http://localhost:5173` |
 | Spegnere tutto (i dati restano) | `docker compose down` |
 | Spegnere e **cancellare** il database | `docker compose down -v` |
 

@@ -5,7 +5,11 @@ use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Admin\ComplaintController as AdminComplaintController;
 use App\Http\Controllers\Auth\TokenController;
+use App\Http\Controllers\ComplaintController;
+use App\Http\Controllers\ReviewController;
+use App\Http\Controllers\Seller\FeedbackController;
 use App\Http\Controllers\MeController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\PickupController;
@@ -69,6 +73,10 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::get('orders', [SellerOrderController::class, 'index']);
         Route::post('pickup/scan', [PickupController::class, 'scan'])->middleware('throttle:scan');
 
+        // Recensioni e reclami ricevuti (giorno 12)
+        Route::get('reviews', [FeedbackController::class, 'reviews']);
+        Route::get('complaints', [FeedbackController::class, 'complaints']);
+
         // Incassi e pagamenti ricevuti (giorno 11)
         Route::get('earnings', [EarningsController::class, 'index']);
 
@@ -87,6 +95,9 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::post('/', [OrderController::class, 'store'])->middleware('throttle:checkout');
         Route::get('{order}', [OrderController::class, 'show'])->whereNumber('order');
         Route::get('{order}/pickup', [PickupController::class, 'show'])->whereNumber('order');
+        // Recensione dopo il ritiro e reclamo nei casi ammessi (giorno 12)
+        Route::post('{order}/review', [ReviewController::class, 'store'])->whereNumber('order');
+        Route::post('{order}/complaints', [ComplaintController::class, 'store'])->whereNumber('order')->middleware('throttle:complaint');
         Route::post('{order}/simulate-payment', [OrderController::class, 'simulatePayment'])->whereNumber('order');
     });
 
@@ -97,5 +108,10 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::get('sellers/{seller}/documents/{document}', [SellerVerificationController::class, 'document']);
         Route::post('sellers/{seller}/approve', [SellerVerificationController::class, 'approve']);
         Route::post('sellers/{seller}/reject', [SellerVerificationController::class, 'reject']);
+
+        // Reclami e rimborsi (giorno 12)
+        Route::get('complaints', [AdminComplaintController::class, 'index']);
+        Route::get('complaints/{complaint}', [AdminComplaintController::class, 'show'])->whereNumber('complaint');
+        Route::post('complaints/{complaint}/decide', [AdminComplaintController::class, 'decide'])->whereNumber('complaint');
     });
 });
