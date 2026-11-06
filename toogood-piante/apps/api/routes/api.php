@@ -58,7 +58,7 @@ Route::post('webhooks/stripe', StripeWebhookController::class);
 Route::get('me', MeController::class)->middleware(['auth:sanctum', 'active']);
 
 // Le rotte di funzionalità (box, ordini, ecc.) vanno in questi gruppi, uno per ruolo.
-Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function () {
+Route::middleware(['auth:sanctum', 'active', 'password.fresh', 'throttle:api'])->group(function () {
     // Onboarding del venditore (giorno 4)
     Route::prefix('seller')->middleware('role:SELLER')->group(function () {
         Route::get('/', [ProfileController::class, 'show']);
@@ -108,6 +108,9 @@ Route::middleware(['auth:sanctum', 'active', 'password.fresh'])->group(function 
         Route::get('sellers/{seller}/documents/{document}', [SellerVerificationController::class, 'document']);
         Route::post('sellers/{seller}/approve', [SellerVerificationController::class, 'approve']);
         Route::post('sellers/{seller}/reject', [SellerVerificationController::class, 'reject']);
+        // Sospensione e riattivazione (giorno 13)
+        Route::post('sellers/{seller}/suspend', [SellerVerificationController::class, 'suspend']);
+        Route::post('sellers/{seller}/reactivate', [SellerVerificationController::class, 'reactivate']);
 
         // Reclami e rimborsi (giorno 12)
         Route::get('complaints', [AdminComplaintController::class, 'index']);

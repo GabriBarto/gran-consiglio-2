@@ -22,6 +22,14 @@ final class BusinessConfig
         return (int) $value;
     }
 
+    /** Come `int`, ma con un valore di riserva: per i parametri nati dopo che il database di sviluppo era già popolato. */
+    public function intOr(string $key, int $default): int
+    {
+        $value = DB::table('config_params')->where('key', $key)->value('value');
+
+        return $value === null ? $default : (int) $value;
+    }
+
     public function feeCents(): int
     {
         return $this->int('fee_cents');

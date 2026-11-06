@@ -6,7 +6,9 @@ use App\Models\Complaint;
 use App\Models\Order;
 use App\Models\Payout;
 use App\Models\Refund;
+use App\Models\Seller;
 use App\Models\User;
+use App\Services\Seller\SellerSuspension;
 use App\Services\Boxes\BusinessConfig;
 use App\Services\Stripe\PaymentService;
 use App\Services\Stripe\TransferService;
@@ -38,6 +40,7 @@ class ComplaintService
         private readonly PaymentService $payments,
         private readonly TransferService $transfers,
         private readonly ComplaintNotifier $notifier,
+        private readonly SellerSuspension $suspension,
     ) {}
 
     /**
@@ -139,7 +142,7 @@ class ComplaintService
     /**
      * @param  'ACCEPT_FULL'|'ACCEPT_PARTIAL'|'REJECT'  $decision
      */
-    public function decide(User $admin, int $complaintId, string $decision, ?int $refundCents, string $note): Complaint
+    public function decide(User $admin, int $complaintId, string $decision, ?int $refundCents, string $note, bool $suspendSeller = false): Complaint
     {
         $complaint = DB::transaction(function () use ($admin, $complaintId, $decision, $refundCents, $note) {
             $complaint = Complaint::lockForUpdate()->find($complaintId)
@@ -198,8 +201,30 @@ class ComplaintService
         });
 
         $this->notifier->decided($complaint);
+        $this->suspendAfterDecision($complaint, $suspendSeller);
 
         return $complaint;
+    }
+
+    /**
+     * Ammonizione o sospensione (US-S05 CA2): l'admin può sospendere subito il venditore; in più, dopo troppi reclami
+     * accolti di recente, la sospensione scatta da sola (US-V18 CA1). Avviene a decisione già salvata.
+     */
+    private function suspendAfterDecision(Complaint $complaint, bool $requested): void
+    {
+        $order = Order::with('seller.user')->findOrFail($complaint->order_id);
+        $seller = $order->seller;
+        if ($seller->verification_status !== Seller::STATUS_APPROVED) {
+            return;
+        }
+        if ($requested) {
+            $this->suspension->suspend($seller, "Sospeso dopo il reclamo sull'ordine {$order->number()}: {$complaint->decision_note}");
+
+            return;
+        }
+        if (in_array($complaint->status, [Complaint::ACCEPTED_FULL, Complaint::ACCEPTED_PARTIAL], true)) {
+            $this->suspension->suspendIfRepeatedComplaints($seller);
+        }
     }
 
     /**

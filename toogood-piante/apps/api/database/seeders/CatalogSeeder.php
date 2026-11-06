@@ -55,6 +55,8 @@ class CatalogSeeder extends Seeder
             ['order_cutoff_hours', '2', 'Si può ordinare fino a N ore prima della fine della fascia di ritiro'],
             ['payout_delay_hours', '24', 'Ore dopo la fine della fascia di ritiro prima di pagare il venditore'],
             ['complaint_window_hours', '24', 'Ore entro cui aprire un reclamo (dal ritiro, o dalla fine fascia se non consegnata)'],
+            ['suspend_after_complaints', '3', 'Reclami accolti nella finestra che sospendono il venditore (0 = mai in automatico)'],
+            ['suspend_window_days', '30', 'Giorni su cui si contano i reclami accolti per la sospensione automatica'],
             ['reservation_minutes', '10', 'Minuti di prenotazione dello stock durante il pagamento'],
         ];
         foreach ($params as [$key, $value, $description]) {

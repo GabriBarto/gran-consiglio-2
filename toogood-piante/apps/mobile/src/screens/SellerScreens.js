@@ -17,7 +17,7 @@ const STATUS_TEXT = {
   PENDING: { label: 'In verifica', color: '#9a6b00', hint: 'Stiamo controllando i tuoi dati. Riceverai un’email appena c’è l’esito.' },
   APPROVED: { label: 'Approvata', color: colors.green, hint: 'La tua attività è stata approvata.' },
   REJECTED: { label: 'Rifiutata', color: colors.error, hint: 'La richiesta non è stata approvata. Correggi e invia di nuovo.' },
-  SUSPENDED: { label: 'Sospesa', color: colors.error, hint: 'Il tuo negozio è sospeso. Contatta l’assistenza.' },
+  SUSPENDED: { label: 'Sospesa', color: colors.error, hint: 'Il tuo negozio è sospeso: non puoi pubblicare box e i clienti non possono fare nuovi ordini. Gli ordini già pagati si ritirano comunque.' },
 };
 
 function StatusBadge({ status }) {
@@ -99,7 +99,7 @@ export function SellerHome({ navigation }) {
       <Card>
         <StatusBadge status={info.status} />
         <Hint>{state.hint}</Hint>
-        {info.status === 'REJECTED' && info.verification_note ? (
+        {(info.status === 'REJECTED' || info.status === 'SUSPENDED') && info.verification_note ? (
           <Text style={{ color: colors.error, marginBottom: 12 }}>Motivo: {info.verification_note}</Text>
         ) : null}
         {s ? (

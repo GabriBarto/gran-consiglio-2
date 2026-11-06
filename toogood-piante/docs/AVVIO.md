@@ -307,6 +307,23 @@ docker compose exec php php artisan migrate
 
 ---
 
+### Dati di prova per la demo (giorno 13)
+
+Per non registrare a mano clienti e negozi: dal PC
+
+```bash
+docker compose exec php php artisan db:seed --class=CatalogSeeder
+docker compose exec php php artisan db:seed --class=DemoSeeder
+```
+
+Crea 2 clienti (`anna.demo@toogood.test`, `luca.demo@toogood.test`), 3 negozi approvati e con il conto collegato (`rossi.demo@…` Bologna, `pianteco.demo@…` Pesaro, `verde.demo@…` Milano) con le box di oggi, e un negozio sospeso (`sospeso.demo@…`, Roma). Password di tutti: `Demo-Password1`; la prima volta serve il codice via email (Mailpit). Si può rilanciare ogni mattina per avere box fresche, senza duplicati.
+
+### Sospendere un venditore (giorno 13)
+
+Pannello admin → **Verifiche** → scheda **Approvate** → il negozio → **Sospendi…** con un motivo (il venditore lo riceve per email e lo vede nell'app). Da sospeso sparisce dalla ricerca, non può pubblicare box né ricevere ordini; gli ordini già pagati si ritirano. **Riattiva** dalla scheda **Sospese**. Dalla scheda **Reclami** si può sospendere insieme alla decisione; dopo 3 reclami accolti in 30 giorni la sospensione scatta da sola.
+
+---
+
 ## E. Comandi utili
 
 | Cosa | Comando |
