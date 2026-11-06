@@ -44,6 +44,12 @@ const BY_CODE = {
   BOX_NOT_AVAILABLE: 'Una delle box non è più in vendita.',
   MIXED_SHOPS: 'Un ordine può contenere box di un solo negozio.',
   SHOP_NOT_AVAILABLE: 'Questo negozio non può ricevere ordini in questo momento.',
+  REVIEW_NOT_ALLOWED: 'Puoi lasciare una recensione solo dopo aver ritirato la box.',
+  ALREADY_REVIEWED: 'Hai già recensito questo ordine.',
+  COMPLAINT_EXISTS: 'Hai già aperto un reclamo su questo ordine.',
+  COMPLAINT_NOT_ALLOWED: 'Su questo ordine non si può aprire un reclamo adesso.',
+  COMPLAINT_WINDOW_CLOSED: 'Il termine per aprire un reclamo su questo ordine è scaduto.',
+  REASON_NOT_ALLOWED: 'Questo motivo non è ammesso per questo ordine.',
   PAYMENT_AMOUNT_TOO_LOW: 'Il totale è troppo basso per essere pagato con carta (minimo 0,50 €).',
 };
 
@@ -70,6 +76,9 @@ const BY_FIELD = {
   list_value_cents: 'Inserisci il valore di listino (almeno 0,01 €).',
   discount_pct: 'Lo sconto deve essere tra il 60% e il 70%.',
   quantity: 'La quantità deve essere almeno 1.',
+  rating: 'Scegli un voto da 1 a 5 stelle.',
+  reason: 'Scegli il motivo del reclamo.',
+  comment: 'Il commento può avere al massimo 1000 caratteri.',
   accept_no_refund: 'Per ordinare devi accettare che, se non ritiri la box, non è previsto rimborso.',
 };
 

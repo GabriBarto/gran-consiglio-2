@@ -112,6 +112,12 @@ export const api = {
   sellerEarnings: () => request('GET', '/seller/earnings'),
   scanPickup: (body) => request('POST', '/seller/pickup/scan', body), // { qr } oppure { code }
 
+  // Recensioni e reclami (giorno 12)
+  reviewOrder: (orderId, body) => request('POST', `/orders/${orderId}/review`, body), // { rating, comment }
+  complainAboutOrder: (orderId, body) => request('POST', `/orders/${orderId}/complaints`, body), // { reason, description }
+  sellerReviews: () => request('GET', '/seller/reviews'),
+  sellerComplaints: () => request('GET', '/seller/complaints'),
+
   // Box del giorno
   boxOptions: () => request('GET', '/seller/box-options'),
   boxes: () => request('GET', '/seller/boxes'),

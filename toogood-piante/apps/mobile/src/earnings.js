@@ -46,3 +46,6 @@ export function summaryRows(summary) {
     { key: 'fees', label: 'Tariffe trattenute', value: formatEuro(summary.fees_cents), tone: 'muted' },
   ];
 }
+
+// Se un reclamo ha portato a un rimborso, il venditore lo vede nella riga dell'ordine (il guadagno è già al netto)
+export const refundLine = (row) => (row.refunded_cents > 0 ? `Rimborsati ${formatEuro(row.refunded_cents)} al cliente dopo un reclamo.` : '');

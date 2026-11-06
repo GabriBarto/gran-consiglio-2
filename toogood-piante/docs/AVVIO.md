@@ -155,6 +155,19 @@ Dopo l'accesso come **venditore** l'app mostra "Il tuo negozio" con stato "Da co
 4. **Approva il venditore dal pannello web** (sezione "Pannello admin web" qui sotto): apri http://localhost:5173, accedi come admin, scegli la richiesta in attesa e premi **Approva**.
 5. Nell'app tocca **Aggiorna stato**: "Approvata" e "Tutto pronto". L'email dell'esito è in Mailpit.
 
+### Prova recensioni, reclami e rimborsi (giorno 12)
+
+Serve un ordine **ritirato** (vedi "Prova il ritiro con il QR"), il **pannello admin** acceso (http://localhost:5173) e l'app. Nessuna migrazione e nessuna nuova libreria: basta ricaricare l'app e rifare `npm run build` o riavviare `npm run dev` nel pannello.
+
+1. **Recensione (cliente):** apri l'ordine ritirato: compare **Com'è andata?** con le cinque stelle e un commento facoltativo. Dopo l'invio vedi "La tua recensione"; non se ne può lasciare un'altra. Il **venditore** la vede nella scheda **Recensioni** della home e la scheda pubblica del negozio mostra la media.
+2. **Reclamo (cliente):** sotto la recensione c'è **C'è un problema con l'ordine?** con la scadenza (24 ore dal ritiro). **Apri un reclamo**, scegli il motivo (per un ordine ritirato: valore inferiore al dichiarato, piante morte o danneggiate, caratteristiche non rispettate) e racconta cosa è successo (almeno 10 caratteri). Lo stato dell'ordine diventa **In reclamo**; nella scheda **Incassi** del venditore l'importo risulta **Sospeso**; il venditore riceve un'email (Mailpit).
+3. **Decisione (admin):** nel pannello apri la scheda **Reclami**, scegli il reclamo e una delle tre decisioni: **Rimborso totale**, **Rimborso parziale** (importo in euro, mai zero e mai il totale) o **Respingi**; scrivi la motivazione (5+ caratteri) e conferma. Con `stripe-mock` il rimborso è simulato. Cliente e venditore ricevono l'esito per email.
+4. **Cosa cambia per il venditore:** totale → nessun pagamento; parziale → il pagamento si riduce dello stesso importo (la scheda Incassi mostra "Rimborsati … al cliente"); respinto → il pagamento riprende l'importo intero. Per far partire il payout: `clock advance 26h` e `payouts:run` (vedi giorno 11).
+5. **Negozio chiuso o box non consegnata:** su un ordine **pagato e non ritirato** il motivo ammesso è solo questo, da quando inizia la fascia di ritiro fino a fine fascia + 24 ore. Per provarlo: non scansionare, `clock advance` di qualche ora, fino a dentro la fascia di ritiro (il comando `clock now` mostra l'ora simulata), apri il reclamo dall'app, poi `clock reset`.
+6. **Termine scaduto:** `clock advance 25h` dopo il ritiro: il reclamo non si può più aprire (`COMPLAINT_WINDOW_CLOSED`) e l'app non mostra più il pulsante.
+
+**Attenzione:** come per il ritiro e il payout, `clock advance` vale per tutto il database di sviluppo: dopo la prova `clock reset` e controlla gli ordini di prova.
+
 ### Prova gli incassi e il pagamento al venditore (giorno 11)
 
 Serve almeno un ordine **pagato** (vedi "Prova l'acquisto dall'app"). Non serve rifare `npm install` né migrare: nessuna dipendenza e nessuna migrazione nuova.

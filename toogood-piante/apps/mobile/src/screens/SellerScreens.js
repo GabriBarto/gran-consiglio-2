@@ -8,6 +8,7 @@ import { errorMessage } from '../errors';
 import { useAction } from '../useAction';
 import { TodayBoxes } from './BoxScreens';
 import { Earnings } from './EarningsScreens';
+import { SellerFeedback } from './FeedbackScreens';
 import { TodayPickups } from './PickupScreens';
 import { Button, colors, ErrorText, Field, Hint, LinkText, Screen, Title } from '../ui';
 
@@ -144,6 +145,8 @@ export function SellerHome({ navigation }) {
       {info.status === 'APPROVED' || info.status === 'SUSPENDED' ? <TodayPickups navigation={navigation} /> : null}
       {/* Anche un negozio sospeso riceve i pagamenti degli ordini già pagati (RB-11) */}
       {info.status === 'APPROVED' || info.status === 'SUSPENDED' ? <Earnings /> : null}
+      {/* Recensioni e reclami ricevuti (giorno 12): anche un negozio sospeso deve vedere cosa succede ai suoi ordini */}
+      {info.status === 'APPROVED' || info.status === 'SUSPENDED' ? <SellerFeedback /> : null}
 
       <LinkText onPress={load}>Aggiorna stato</LinkText>
       <Button title="Esci" secondary onPress={logout} />

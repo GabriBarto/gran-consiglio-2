@@ -8,6 +8,7 @@ import { useCart } from '../CartContext';
 import { errorMessage } from '../errors';
 import { formatCountdown, formatDate, localTimeOf, paymentOutcomeText, shortageLines, statusInfo, ticketMessage, timeOf } from '../orders';
 import { loadTicket, saveTicket } from '../qrStore';
+import { ComplaintCard, ReviewCard } from './FeedbackScreens';
 import { formatEuro } from '../pricing';
 import { useAction } from '../useAction';
 import { Button, Card, colors, ErrorText, Hint, LinkText, Screen, Stepper, Title } from '../ui';
@@ -416,7 +417,11 @@ export function OrderScreen({ route, navigation }) {
           Non hai ritirato l’ordine nella fascia indicata ({order.shop.pickup_from}–{order.shop.pickup_to}): come previsto, non c’è rimborso.
         </Text>
       ) : null}
-      {order.status === 'REFUNDED_FULL' ? <Hint>Questo ordine è stato rimborsato per intero.</Hint> : null}
+      {order.status === 'REFUNDED_FULL' && !order.complaint ? <Hint>Questo ordine è stato rimborsato per intero.</Hint> : null}
+
+      {/* Recensione dopo il ritiro e reclamo nei casi ammessi (giorno 12): cosa si può fare lo decide il server */}
+      <ReviewCard order={order} onDone={load} />
+      <ComplaintCard order={order} onDone={load} />
 
       <Button title="Torna ai negozi" onPress={() => navigation.navigate('Shops')} secondary={!paidNow} />
       <LinkText onPress={() => navigation.navigate('Orders')}>Vedi tutti i miei ordini</LinkText>
