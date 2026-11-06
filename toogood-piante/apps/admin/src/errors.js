@@ -14,6 +14,8 @@ const BY_CODE = {
   NO_DOCUMENTS: 'Il venditore non ha allegato documenti: non si può approvare.',
   INVALID_STATE: 'La richiesta è già stata decisa. Aggiorna la lista.',
   NOT_FOUND: 'Elemento non trovato.',
+  PAYMENT_PROVIDER_ERROR: 'Il servizio di pagamento non ha risposto: la decisione non è stata salvata. Riprova tra poco.',
+  INVALID_REFUND_AMOUNT: 'Il rimborso parziale deve essere maggiore di zero e minore del totale dell’ordine.',
 };
 
 const BY_FIELD = {
@@ -22,7 +24,8 @@ const BY_FIELD = {
   password_confirmation: 'Le due password non coincidono.',
   code: 'Inserisci il codice di 6 cifre.',
   current_password: 'La password attuale non è corretta.',
-  note: 'Il motivo del rifiuto deve avere tra 5 e 1000 caratteri.',
+  note: 'La motivazione deve avere tra 5 e 1000 caratteri.',
+  refund_cents: 'Indica un importo da rimborsare valido.',
 };
 
 export function errorMessage(err) {

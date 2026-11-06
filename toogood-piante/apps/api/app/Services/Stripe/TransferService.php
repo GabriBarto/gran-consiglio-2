@@ -36,4 +36,14 @@ class TransferService
 
         return $transfer->id;
     }
+
+    /** Si riprende dal venditore (tutto o in parte) un trasferimento già inviato: reclamo accolto dopo il payout. */
+    public function reverse(Payout $payout, int $cents, string $idempotencyKey): string
+    {
+        return $this->client()->transfers->createReversal(
+            $payout->stripe_transfer_id,
+            ['amount' => $cents, 'metadata' => ['payout_id' => (string) $payout->id, 'reason' => 'complaint']],
+            ['idempotency_key' => $idempotencyKey],
+        )->id;
+    }
 }

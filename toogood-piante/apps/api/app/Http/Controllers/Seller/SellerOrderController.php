@@ -16,7 +16,7 @@ class SellerOrderController extends Controller
     /** Stati che al venditore interessano: da ritirare, ritirato, non ritirato e quelli già decisi. Gli ordini mai pagati non compaiono. */
     private const VISIBLE = [
         Order::PAID, Order::PICKED_UP, Order::NOT_PICKED_UP,
-        'IN_COMPLAINT', Order::REFUNDED_FULL, 'REFUNDED_PARTIAL', 'COMPLAINT_REJECTED',
+        Order::IN_COMPLAINT, Order::REFUNDED_FULL, Order::REFUNDED_PARTIAL, Order::COMPLAINT_REJECTED,
     ];
 
     public function index(Request $request, Clock $clock): JsonResponse

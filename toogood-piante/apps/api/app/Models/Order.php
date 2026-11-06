@@ -24,6 +24,12 @@ class Order extends Model
 
     public const REFUNDED_FULL = 'REFUNDED_FULL';
 
+    public const REFUNDED_PARTIAL = 'REFUNDED_PARTIAL';
+
+    public const IN_COMPLAINT = 'IN_COMPLAINT';
+
+    public const COMPLAINT_REJECTED = 'COMPLAINT_REJECTED';
+
     // Lo stato e gli importi li imposta solo il servizio dell'ordine, mai la richiesta del client
     protected $guarded = ['*'];
 
@@ -61,6 +67,21 @@ class Order extends Model
     public function payout(): HasOne
     {
         return $this->hasOne(Payout::class);
+    }
+
+    public function review(): HasOne
+    {
+        return $this->hasOne(Review::class);
+    }
+
+    public function complaint(): HasOne
+    {
+        return $this->hasOne(Complaint::class);
+    }
+
+    public function refunds(): HasMany
+    {
+        return $this->hasMany(Refund::class);
     }
 
     public function reservations(): HasMany

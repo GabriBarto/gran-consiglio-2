@@ -36,6 +36,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('password-forgot', fn (Request $request) => Limit::perHour(5)->by($byEmailAndIp($request)));
         RateLimiter::for('password-reset', fn (Request $request) => Limit::perMinute(5)->by($byEmailAndIp($request)));
         RateLimiter::for('checkout', fn (Request $request) => Limit::perMinute(20)->by((string) $request->user()?->id));
+        RateLimiter::for('complaint', fn (Request $request) => Limit::perMinute(10)->by((string) $request->user()?->id));
         RateLimiter::for('scan', fn (Request $request) => Limit::perMinute(30)->by((string) $request->user()?->id));
         RateLimiter::for('shops', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
         RateLimiter::for('password-change', fn (Request $request) => Limit::perMinute(5)->by((string) $request->user()?->id));

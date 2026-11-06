@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { earningText, payoutInfo, payoutLine, summaryRows } from '../src/earnings.js';
+import { earningText, payoutInfo, payoutLine, refundLine, summaryRows } from '../src/earnings.js';
 
 const row = (over = {}) => ({
   payout_status: 'SCHEDULED', payout_cents: 550, earning_cents: 550,
@@ -40,4 +40,10 @@ test('summaryRows: trasferito, in attesa, sospeso e tariffe', () => {
   assert.deepEqual(rows.map((r) => r.value), ['5,50 €', '11,00 €', '0,00 €', '4,50 €']);
   assert.equal(rows[2].tone, 'muted');
   assert.equal(summaryRows({ transferred_cents: 0, pending_cents: 0, held_cents: 300, fees_cents: 0 })[2].tone, 'bad');
+});
+
+test('refundLine: compare solo se c\'è stato un rimborso', () => {
+  assert.equal(refundLine(row()), '');
+  assert.equal(refundLine(row({ refunded_cents: 0 })), '');
+  assert.equal(refundLine(row({ refunded_cents: 200 })), 'Rimborsati 2,00 € al cliente dopo un reclamo.');
 });

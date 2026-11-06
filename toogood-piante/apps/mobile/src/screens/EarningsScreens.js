@@ -2,7 +2,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, Text, View } from 'react-native';
 import { api } from '../api';
-import { earningText, payoutInfo, payoutLine, summaryRows } from '../earnings';
+import { earningText, payoutInfo, payoutLine, refundLine, summaryRows } from '../earnings';
 import { errorMessage } from '../errors';
 import { formatDate } from '../orders';
 import { Card, colors, ErrorText, Hint, LinkText } from '../ui';
@@ -61,6 +61,7 @@ export function Earnings() {
                 </View>
                 <Text style={{ color: row.earning_cents < 0 ? colors.error : colors.muted }}>{earningText(row)}</Text>
                 <Text style={{ color: colors.muted }}>{payoutLine(row)}</Text>
+                {refundLine(row) ? <Text style={{ color: colors.muted }}>{refundLine(row)}</Text> : null}
               </View>
             );
           })}

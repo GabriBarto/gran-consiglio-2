@@ -51,7 +51,7 @@ class OrderController extends Controller
     {
         $orders = Order::where('customer_id', $request->user()->id)
             ->whereNotIn('status', [Order::EXPIRED, Order::PAYMENT_FAILED])
-            ->with(['items.box', 'seller', 'reservations'])
+            ->with(['items.box', 'seller', 'reservations', 'review', 'complaint', 'pickupToken'])
             ->orderByDesc('id')->limit(50)->get();
 
         return response()->json([

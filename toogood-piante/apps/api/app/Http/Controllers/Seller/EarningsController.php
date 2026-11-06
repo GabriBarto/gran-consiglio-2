@@ -23,15 +23,17 @@ class EarningsController extends Controller
 
         // Un ordine rimborsato per intero non è un incasso: non compare né nei totali né nell'elenco
         $orders = Order::where('seller_id', $seller->id)->where('status', '!=', Order::REFUNDED_FULL)
-            ->whereHas('payout')->with(['payout', 'items'])->orderByDesc('pickup_window_end_at')->orderByDesc('id')->get();
+            ->whereHas('payout')->with(['payout', 'items', 'refunds'])->orderByDesc('pickup_window_end_at')->orderByDesc('id')->get();
 
         $rows = $orders->map(function (Order $order) {
             $gross = (int) $order->items->sum(fn ($i) => $i->quantity * $i->unit_price_cents);
             $fee = (int) $order->items->sum(fn ($i) => $i->quantity * $i->unit_fee_cents);
             $payout = $order->payout;
+            // Un rimborso parziale deciso su un reclamo è a carico del venditore, fino a quanto avrebbe incassato
+            $refunded = (int) $order->refunds->sum('amount_cents');
 
             // Con un reclamo aperto l'importo è "sospeso" anche se il payout non è ancora stato toccato (US-V16 CA2)
-            $state = $order->status === 'IN_COMPLAINT' && $payout->status === Payout::SCHEDULED ? Payout::HELD : $payout->status;
+            $state = $order->status === Order::IN_COMPLAINT && $payout->status === Payout::SCHEDULED ? Payout::HELD : $payout->status;
 
             return [
                 'order_id' => $order->id,
@@ -40,7 +42,8 @@ class EarningsController extends Controller
                 'order_status' => $order->status,
                 'gross_cents' => $gross,
                 'fee_cents' => $fee,
-                'earning_cents' => $gross - $fee,
+                'refunded_cents' => $refunded,
+                'earning_cents' => $gross - $fee - $refunded,
                 'payout_cents' => $payout->amount_cents,
                 'payout_status' => $state,
                 'scheduled_at' => $payout->scheduled_at->toIso8601String(),
