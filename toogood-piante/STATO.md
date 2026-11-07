@@ -4,6 +4,7 @@ Ultimo aggiornamento: 2026-11-07 – **giorni 1–13 completati e provati a mano
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
+- **Database** (perché le tabelle, schema ER e logico, funzionamento con Docker): [docs/database](docs/database/README.md)
 - **Perché abbiamo scelto così** (per la presentazione):
   - [Giorno 1 – infrastruttura e schema dati](docs/scelte/giorno-1-infrastruttura.md)
   - [Giorno 2 – autenticazione](docs/scelte/giorno-2-autenticazione.md)
