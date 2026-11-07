@@ -37,7 +37,7 @@ Parametri come tariffa, sconto, ore limite d'ordine e ritardo del payout nell'MV
 
 ## 2. Calendario di 14 giorni
 
-**Avanzamento:** giorni 1–13 completati e provati a mano dal team (giorno 12: recensioni, reclami e rimborsi, anche con `stripe-mock`; giorno 13: sospensione venditori, casi limite e dati demo). Prossimo: giorno 14 (cuscinetto): correzione dei difetti, copione della demo, README. Stato dettagliato in [toogood-piante/STATO.md](toogood-piante/STATO.md).
+**Avanzamento:** giorni 1–13 completati e provati a mano dal team (giorno 12: recensioni, reclami e rimborsi, anche con `stripe-mock`; giorno 13: sospensione venditori, casi limite e dati demo). Giorno 14 (cuscinetto): verifiche finali, copione della demo ([toogood-piante/docs/DEMO.md](toogood-piante/docs/DEMO.md)) e README fatti; manca solo l'esecuzione completa della demo con due telefoni. Stato dettagliato in [toogood-piante/STATO.md](toogood-piante/STATO.md).
 
 Ipotesi: lavoro ogni giorno; tu provi l'app sul telefono a fine giornata. Se un giorno scivola, si taglia dal fondo della lista "se avanza tempo" (vedi sotto), mai dal percorso principale.
 

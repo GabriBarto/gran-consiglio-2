@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-07 – **giorni 1–13 completati e provati a mano dal team** (giorni 12 e 13 provati il 2026-11-07 su telefono, nel pannello admin e con `stripe-mock`, compresi lo storno e la concorrenza). Tutto in `main` (PR #7–#21). Resta il giorno 14 (cuscinetto). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-07 – **giorni 1–13 completati e provati a mano dal team** (giorni 12 e 13 provati il 2026-11-07 su telefono, nel pannello admin e con `stripe-mock`, compresi lo storno e la concorrenza). Tutto in `main` (PR #7–#21). Il giorno 14 (cuscinetto) è in corso: copione della demo e README fatti, verifiche finali eseguite. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -170,8 +170,11 @@ Ultimo aggiornamento: 2026-11-07 – **giorni 1–13 completati e provati a mano
 - **Solo sviluppo:** PHP-FPM gira come root (`php-fpm -R`) per evitare problemi di permessi sui file condivisi con Windows. Non adatto alla produzione.
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
-## Prossimo: giorno 14 – cuscinetto
-I giorni 12 e 13 sono già provati a mano. Restano: correggere i difetti emersi, scrivere il copione della demo (con i dati di `DemoSeeder`) e aggiornare il README. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+## Giorno 14 – cuscinetto (fatto)
+- **Verifiche finali (2026-11-07):** 314 su 314 test backend, 57 su 57 dell'app, `npm run build` del pannello admin ok (prima mai compilato), bundle Android ok. Nessun difetto nuovo emerso dalle prove dei giorni 12 e 13.
+- **Copione della demo:** [docs/DEMO.md](docs/DEMO.md): 6 atti (nuovo negozio approvato, acquisto, ritiro con QR, recensione e reclamo con rimborso, pagamento al venditore, sospensione), preparazione, ripristino e tabella dei problemi. **Il copione non è ancora stato eseguito per intero dall'inizio alla fine**: farlo una volta con due telefoni prima della presentazione, correggendo ciò che non torna (è il risultato verificabile del giorno 14).
+- **README** aggiornato: stato, pannello admin, dati demo, comando dell'orologio (una sola unità), test.
+- **Limiti noti che restano** (da dire in presentazione): Stripe è simulato (`stripe-mock`, nessuna carta né webhook veri, mai provato con chiavi di test vere); nessuna paginazione né filtri avanzati nella ricerca; nessuna foto nei reclami; nessuna moderazione delle recensioni; PHP-FPM come root solo per lo sviluppo; il database di sviluppo ha un unico orologio simulato che chiude anche gli ordini degli altri. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
