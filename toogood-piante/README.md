@@ -6,6 +6,7 @@ Documenti di riferimento (nella cartella superiore): `UserStory-v4.md` e `PianoT
 Stato: **giorno 14 di 14**, prototipo completo. Il percorso intero funziona: registrazione con 2FA → venditore verificato dall'admin → box pubblicata → ricerca per distanza → carrello e pagamento (Stripe simulato) → QR di ritiro e scansione → recensione o reclamo → rimborso deciso dall'admin → pagamento al venditore 24 ore dopo il ritiro → sospensione dei venditori. Tutto è provato con test automatici e a mano dal team, ma con **Stripe simulato** (`stripe-mock`: niente carte vere né webhook veri). Dettagli e come riprendere in [STATO.md](STATO.md).
 
 - **Guida all'avvio:** [docs/AVVIO.md](docs/AVVIO.md)
+- **Database** (scelte, schema ER e logico, collegamento con Docker): [docs/database](docs/database/README.md)
 - **Copione della demo** (15 minuti, con dati di prova e orologio simulato): [docs/DEMO.md](docs/DEMO.md)
 - **Motivazione delle scelte tecniche** (una nota per giorno): cartella [docs/scelte](docs/scelte)
 - **Documentazione degli endpoint:** `docs/API-*.md` (autenticazione, venditore, box, negozi, ordini, ritiro, incassi, reclami)
