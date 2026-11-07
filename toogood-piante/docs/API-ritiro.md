@@ -76,4 +76,4 @@ Per provarlo in sviluppo: `docker compose exec php php artisan clock advance 6h`
 - Il QR è valido per il **giorno dell'ordine**: un ordine fatto la sera per il ritiro del giorno dopo non esiste (le box si vendono solo per il giorno stesso, RB-06).
 - La fascia è quella del negozio al momento del pagamento; una modifica successiva degli orari non cambia i biglietti già emessi.
 - Nessun annullamento del ritiro: una scansione per errore non si può annullare dall'app (si correggerebbe da admin, ancora non previsto).
-- La scansione con la fotocamera e la schermata del QR sono nell'app (Expo Go le supporta); non provate su dispositivo in questa fase.
+- La scansione con la fotocamera e la schermata del QR sono nell'app (Expo Go le supporta); provate dal team su telefono.
