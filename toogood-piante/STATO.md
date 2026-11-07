@@ -1,6 +1,6 @@
 # Stato del lavoro
 
-Ultimo aggiornamento: 2026-11-06 – **giorno 13 scritto e provato con i test** (sospensione venditori, limiti, casi limite, dati demo; **non provato su telefono, nel browser né con il test di concorrenza**, vedi sotto). Giorni 1–12 in `main` (PR #7–#20); il giorno 13 è sul branch `andres`, senza pull request. Il giorno 12 è ancora **da provare su telefono e con `stripe-mock`**. Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+Ultimo aggiornamento: 2026-11-07 – **giorni 1–13 completati e provati a mano dal team** (giorni 12 e 13 provati il 2026-11-07 su telefono, nel pannello admin e con `stripe-mock`, compresi lo storno e la concorrenza). Tutto in `main` (PR #7–#21). Resta il giorno 14 (cuscinetto). Calendario: [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Documenti
 - **Come avviare l'app** (comandi, dove leggere le email di conferma): [docs/AVVIO.md](docs/AVVIO.md)
@@ -146,7 +146,7 @@ Ultimo aggiornamento: 2026-11-06 – **giorno 13 scritto e provato con i test** 
 - **App cliente:** nel dettaglio dell'ordine, **Com'è andata?** (stelle + commento) dopo il ritiro e **Apri un reclamo** (motivi ammessi e scadenza decisi dal server, `complaint_options`); dopo l'invio, lo stato e l'esito del reclamo con la motivazione. **App venditore:** schede **Recensioni** e **Reclami** nella home; la scheda Incassi mostra "Rimborsati … al cliente".
 - Nuovi: `Review`, `Complaint`, `Refund`, `ComplaintService`, `ComplaintNotifier`, due email, controller (cliente, venditore, admin); `src/feedback.js`, `src/screens/FeedbackScreens.js`, `apps/admin/src/Reclami.jsx`, `money.js`. **Nessuna migrazione** (le tabelle `reviews`, `complaints`, `refunds` c'erano dal giorno 1) e nessuna nuova libreria.
 - Test: **292 su 292** backend (39 nuovi: recensioni, termini a 24 ore al secondo, motivi per stato dell'ordine, rimborso totale/parziale/rifiuto, payout ridotto o azzerato, storno dopo l'invio, errore di Stripe senza salvataggi, decisione ripetuta, permessi, privacy, incassi) e **57 su 57** dell'app (9 nuovi). Pannello admin provato nel browser (Playwright) **con l'API simulata**: lista, dettaglio, validazione dell'importo e payload inviato. Bundle Android ok.
-- **Non provato:** le nuove schermate dell'app **su telefono**; il rimborso e lo storno **con `stripe-mock`** (nei test Stripe è un doppio; i metodi `refunds->create` con importo e `transfers->createReversal` sono quelli dell'SDK, ma mai eseguiti davvero); il pannello admin **contro l'API viva**. Da fare prima di andare avanti.
+- **Provato a mano dal team (2026-11-07):** recensioni, reclami e decisioni dell'admin (rimborso totale, parziale, rifiuto) dall'app e dal pannello admin contro l'API viva, con `stripe-mock`; effetto sul payout; storno di un trasferimento già inviato. Nei test automatici Stripe resta un doppio, quindi questa è la prova che i metodi `refunds->create` e `transfers->createReversal` funzionano davvero.
 - Limiti noti: niente foto nei reclami (R4); nessuna moderazione o segnalazione delle recensioni (R4); i reclami ripetuti non sospendono ancora il venditore (giorno 13); se lo storno di un trasferimento già inviato fallisce (saldo del venditore insufficiente) la decisione resta bloccata finché non si risolve; nessun audit log generale (restano `decided_by` e `decided_at` sul reclamo); chiamata a Stripe con le righe bloccate (come i payout).
 
 **Giorno 13 – rifinitura** (sospensione: [docs/API-venditore.md](docs/API-venditore.md); dati demo: [docs/AVVIO.md](docs/AVVIO.md)):
@@ -156,7 +156,7 @@ Ultimo aggiornamento: 2026-11-06 – **giorno 13 scritto e provato con i test** 
 - **Limiti:** tetto di 120 richieste al minuto per utente autenticato (`throttle:api`), oltre ai limiti già presenti.
 - **Casi limite con test:** cambio di ora legale (29 marzo e 25 ottobre) per biglietto di ritiro e orario limite; fascia di ritiro più corta di 2 ore.
 - **Dati demo:** `php artisan db:seed --class=DemoSeeder` crea 2 clienti, 3 negozi approvati con box di oggi e 1 sospeso (password `Demo-Password1`); rilanciabile ogni mattina.
-- Test: **314 su 314** backend (22 nuovi: sospensione, soglia automatica, ora legale, fasce corte, seeder demo). **Pannello admin e app non compilati né provati** (su questo PC mancavano `node_modules`): fare `npm install` e `npm run build` in `apps/admin`, `npm test` in `apps/mobile`.
+- Test: **314 su 314** backend (22 nuovi: sospensione, soglia automatica, ora legale, fasce corte, seeder demo). **Provato a mano dal team (2026-11-07):** sospensione e riattivazione dal pannello admin, effetto sull'app del venditore sospeso e sulla ricerca, prova di concorrenza (acquisti e scansioni simultanei).
 - **Non fatto:** nessun nuovo test di concorrenza (quelli veri sono stati fatti a mano ai giorni 8 e 10: PHPUnit non può simulare richieste parallele); nessuna sospensione dei clienti (US-S04, fuori MVP).
 
 ## Scelte da sapere
@@ -171,7 +171,7 @@ Ultimo aggiornamento: 2026-11-06 – **giorno 13 scritto e provato con i test** 
 - Se l'API dà 502 dopo un riavvio, `docker compose restart nginx` (la configurazione attuale lo evita: nginx risolve `php` a ogni richiesta).
 
 ## Prossimo: giorno 14 – cuscinetto
-Prima di tutto **provare i giorni 12 e 13**: giorno 12 su telefono e con `stripe-mock` (rimborso e storno mai eseguiti davvero), giorno 13 nel pannello admin (Sospendi/Riattiva, casella nei reclami) e nell'app del venditore sospeso; ripetere a mano la prova di concorrenza (acquisti e scansioni simultanei). Poi correggere i difetti, scrivere il copione della demo e aggiornare il README. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
+I giorni 12 e 13 sono già provati a mano. Restano: correggere i difetti emersi, scrivere il copione della demo (con i dati di `DemoSeeder`) e aggiornare il README. Dettagli in [../MVP-e-Roadmap.md](../MVP-e-Roadmap.md).
 
 ## Come riprendere
 Guida completa: [docs/AVVIO.md](docs/AVVIO.md). In breve:
